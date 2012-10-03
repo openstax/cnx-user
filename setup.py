@@ -34,8 +34,7 @@ def main():
           description='User functions for rhaptos2',
           long_description='see description',
           install_requires=[
-              "fabric >= 1.0.0"
-              ,"flask >= 0.8"
+              "flask >= 0.8"
               ,"statsd"
               ,"requests"
               ,"pylint"
