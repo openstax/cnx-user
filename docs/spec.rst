@@ -131,3 +131,37 @@ Delete user detail
 
 Not yet supported
 
+
+
+Search
+------
+
+Single-term search in 0.0.1
+
+An important part of user details is the search function.
+We shall take the google-style approach::
+
+
+    curl http://www.cnx.org/user/search?q=paul
+
+    q -> query
+    term -> all characters following q= will be assumed to 
+            be a single search term across email, fullname fields
+
+The results will be a JSON doc containing id, fullname, email and known identifers::
+   
+    {
+    "id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383", 
+    "identifiers": [
+        "https://www.google.com/accounts/o8/id?id=AItOawlc7oYk8MNlwBgxCwMhLDqzXq1BXA4abbk", 
+        "http://openid.cnx.org/pbrian", 
+        "paul@mikadosoftware.com"
+    ], 
+    "name": {"fullname": "Paul Brian"}
+    }
+
+Errors
+------
+
+A malformed query url will recv 422 error
+
