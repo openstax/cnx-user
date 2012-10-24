@@ -20,6 +20,16 @@ Contents:
 
 
 
+.. automodule:: rhaptos2.user.views
+   :members: 
 
 
 
+
+
+
+Related Projects
+================
+
+* `rhaptos2.repo <http://frozone.readthedocs.org>`_
+* `rhaptos2.user <http://rhaptos2user.readthedocs.org>`_

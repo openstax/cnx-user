@@ -73,13 +73,13 @@ POST user-details
 
 A POST request with a minimum document set out::
 
-{
-     "id": null,
-     "identifiers": [
-         "http://openid.cnx.org/pbrian"
-                    ],
-     "version": "0.0.1"
-}
+    {
+	 "id": null,
+	 "identifiers": [
+	     "http://openid.cnx.org/pbrian"
+			],
+	 "version": "0.0.1"
+    }
 
 The above fields MUST be supplied, including the null ID
 If those fields are not supplied a 422 error will be generated.
@@ -99,21 +99,21 @@ PUT user-details
 
 A PUT request with a minimum document set out::
 
-{
-     "id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383",
-     "identifiers": [
-         "http://openid.cnx.org/pbrian"
-                    ],
-     "version": "0.0.1",
-     "name":{
-                   "title": "Mr",
-                   "firstname": "Paul",
-                   "middlenames": "Richard",
-                   "lastname":    "Brian",
-                   "suffix":      "",
-                   "fullname": "Paul Brian",
-		   },
-}
+    {
+	 "id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383",
+	 "identifiers": [
+	     "http://openid.cnx.org/pbrian"
+			],
+	 "version": "0.0.1",
+	 "name":{
+		       "title": "Mr",
+		       "firstname": "Paul",
+		       "middlenames": "Richard",
+		       "lastname":    "Brian",
+		       "suffix":      "",
+		       "fullname": "Paul Brian",
+		       },
+    }
 
 
 All the fields sent in a PUT are replacing - they will completely replace
