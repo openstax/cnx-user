@@ -248,4 +248,8 @@ html_logo = 'rhaptos2userlogo.jpg'
 html_title = "Rhaptos2 User Server"
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+
+intersphinx_mapping = {
+  'rhaptos2repo': ('http://frozone.readthedocs.org/en/latest/', None),
+  'rhaptos2user': ('http://rhaptos2user.readthedocs.org/en/latest/', None),
+    }
