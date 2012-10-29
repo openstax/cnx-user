@@ -28,8 +28,14 @@ from rhaptos2.common import log
 from rhaptos2.common import err
 from rhaptos2.common import conf
 
-from rhaptos2.user import app, dolog
-#circular reference ? see http://flask.pocoo.org/docs/patterns/packages/
+from rhaptos2.user import get_app, dolog
+app = get_app()
+
+
+@app.before_request
+def requestid():
+    g.requestid = uuid.uuid4()
+    g.request_id = g.requestid
 
 
 
@@ -62,13 +68,30 @@ stubjsondoc = json.dumps(stubuserdoc)
 @app.route('/user/', methods=["GET",])
 def get_user():
     """
+
+    example::
+
+      /user?user=org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383
+
+    .. todo:: Flask will unquote the whole URL and try to route that,
+              instead of taking the route that exists in quoted format,
+               and then calculating the <parameter>
+             
+              /openid/this/is/a/path
+ 
+              /openid/http://this/is/openid/url
+    
+              /openid/'http%3A%2F%2Fthis%2Fis%2Fopenid%2Furl'
+           
+              Flask should handle the last differently.   
+
     originally this use <idenfitfier> to pluckjt eh id from a path.
     However if I sent in an openid id, with / in it, even quoted, Falsk would
     pre-unquote and try to route the url now with added slashes.
 
     I switched to a quick fix - now passing in a quote_plus'd query string named user
     
-    /user?user=foo
+  
 
     ##Write tests!
     """
@@ -79,7 +102,13 @@ def get_user():
 
     dolog("INFO", "THis is request %s" % g.requestid)
     dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
-    ##actually look up the user here !
+
+    ### errors to abort function
+    ### .. todo:: better trap than abort()
+
+    security_token = None
+    usermodel.get_user(security_token, unquoted_identifier)     
+
     resp = flask.make_response(stubjsondoc)
     resp.content_type='application/json'
     return resp
