@@ -8,6 +8,7 @@ Author: Paul Brian
 This software is subject to the provisions of the GNU Lesser General
 Public License Version 2.1 (LGPL).  See LICENSE.txt for details.
 """
+
 import os
 from optparse import OptionParser
 from flask import Flask
@@ -17,13 +18,18 @@ from rhaptos2.common import conf
 
 def make_app(_confd):
     """Application factory function"""
+
     app = Flask('rhaptos2.user')
-    set_app(app, _confd)
+    set_app(app, _confd)  ### make available through __init__.py
+
     # Import the views to initialize them
-    from rhaptos2.user import backend, usermodel    
-    usermodel.init_mod(_confd)
+    from rhaptos2.user import backend    ## these now *should* pick up the configured app
+                                         ## the only issue is __init__ has already been run.
+    backend.initdb(_confd)      #set up session with engine.  Now backend.db_session is session_maker
     import rhaptos2.user.views
+    assert app == rhaptos2.user._app
     return app
+
 
 def parse_args():
     parser = OptionParser()

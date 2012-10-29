@@ -30,10 +30,10 @@ from rhaptos2.common import conf
 
 
 
-from rhaptos2.user import get_app, dolog, usermodel, backend
+from rhaptos2.user import get_app, dolog, usermodel
+from rhaptos2.user.backend import db_session
+
 app = get_app()
-
-
 
 
 @app.before_request
@@ -41,32 +41,15 @@ def requestid():
     g.requestid = uuid.uuid4()
     g.request_id = g.requestid
 
-
+@app.teardown_request
+def shutdown_session(exception=None):
+    db_session.remove()
 
 
 @app.route('/')
 def index():
     dolog("INFO", "THis is request %s" % g.requestid)
-    return "Stub user database"
-
-###Holy CRAP what an awful place to put this !!!
-stubuserdoc={"id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383",
-
-    "details":{"FullName": "Benjamin Franklin",
-               "email":   "ben@mikadosoftware.com",
-               "Address" : "36 Craven Street  London WC2N 5NF",
-              },
-
-    "identifiers": ["https://www.google.com/accounts/o8/id?id=AItOawlc7oYk8MNlwBgxCwMhLDqzXq1BXA4abbk",
-                "http://openid.cnx.org/user4",
-                "paul@mikadosoftware.com"
-               ],
-    "version": "1.0"
-    }
-
-stubjsondoc = json.dumps(stubuserdoc)
-
-
+    return "This is the USer Database for CNX"
 
 
 @app.route('/user/', methods=["GET",])
@@ -94,11 +77,8 @@ def get_user():
     pre-unquote and try to route the url now with added slashes.
 
     I switched to a quick fix - now passing in a quote_plus'd query string named user
-    
-  
-
-    ##Write tests!
     """
+
     qstr = request.query_string
     
     #    unquoted_identifier = urllib.unquote(identifier)
@@ -122,4 +102,11 @@ def get_user():
     return resp
 
 
-
+@app.route('/user/', methods=["POST",])
+def view_post_user():
+    """ """
+    ###
+    #session add etc here
+    js = request.json
+    print js
+    return "got %s" % js

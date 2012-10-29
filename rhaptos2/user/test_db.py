@@ -37,9 +37,18 @@ confd= {
 
 
 CONFD=confd
+from rhaptos2.user import backend
+backend.initdb(CONFD)  #only do thios once per applicaiton not per test
 
 
-usermodel.init_mod(CONFD)     
+def setup():
+    clean_dbase() #### .. todo:: in setup / teardown use transactions and rollback please///
+    populate_dbase()
+
+            
+def teardown():
+    backend.db_session.remove()
+
 
 def clean_dbase():
     conn = psycopg2.connect("""dbname='%(rhaptos2user_pgdbname)s'\
@@ -68,19 +77,12 @@ def populate_dbase():
 
     u = usermodel.User()
     u = usermodel.populate_user(ben_dict, u)
-    u.user_id = "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383"
+    u.user_id = ben_dict['id']
     print "adding", u, u.firstname, u.user_id
-    usermodel.UserSession.add(u)
-    usermodel.UserSession.commit()
-   
+    backend.db_session.add(u)
 
-def setup():
-    clean_dbase() #### .. todo:: in setup / teardown use transactions and rollback please///
-    populate_dbase()
-        
-            
-def teardown():
-    clean_dbase() #### .. todo:: in setup / teardown use transactions and rollback please///
+    backend.db_session.commit()
+   
 
 
 ##################################
@@ -112,19 +114,21 @@ incomingd = {u'user_id': None,
 json_new_user = json.dumps(incomingd)
 
 
-#@with_setup(setup, teardown)
-def test_connect2db():
-    usermodel.post_user(None, json_new_user)
+@with_setup(setup, teardown)
+def test_can_add_user():
+    new_user_id = usermodel.post_user(None, json_new_user)
     
 
-#@with_setup(setup, teardown)
+
+
+@with_setup(setup, teardown)
 def test_retrieve_known_user_id():
     jsonstr = usermodel.get_user(None, "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383")
     d = json.loads(jsonstr)
     assert d['lastname'] == 'Franklin'
 
 
-#@with_setup(setup, teardown)
+@with_setup(setup, teardown)
 def test_lastname_search():
     pass
 
