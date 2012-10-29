@@ -168,11 +168,14 @@ def populate_user(incomingd, userobj):
     return userobj
     
 
-def post_user(security_token, json_str):
+def post_user(security_token, json_dict):
     """Given a user_id, and a json_str representing the complete set of fields
        then update those fields for that user_id 
 
-    returns user_id string (uuid)"""
+    I am getting a dictionary direct form Flask request object -
+    want to handle that myself with parser.
+
+    returns User object, for later saveing to DB"""
 
     #get User()
     #parse JSON
@@ -187,12 +190,13 @@ def post_user(security_token, json_str):
     u.set_new_id()
     print u.user_id
 
-    parser = verify_schema_version(None)
-    incomingd = parser(json_str)
+    #parser = verify_schema_version(None)
+    #incomingd = parser(json_str)
 
+    incomingd = json_dict
     u = populate_user(incomingd, u)
 
-    return u.user_id
+    return u
 
         
 def get_user(security_token, user_id):

@@ -28,8 +28,6 @@ from rhaptos2.common import log
 from rhaptos2.common import err
 from rhaptos2.common import conf
 
-
-
 from rhaptos2.user import get_app, dolog, usermodel
 from rhaptos2.user.backend import db_session
 
@@ -108,5 +106,9 @@ def view_post_user():
     ###
     #session add etc here
     js = request.json
-    print js
-    return "got %s" % js
+    print "***" + repr(js) + str(type(js))
+    u = usermodel.post_user(None, js)
+    print "here"
+    db_session.add(u)
+    db_session.commit()
+    return "Saved"
