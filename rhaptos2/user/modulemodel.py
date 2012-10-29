@@ -1,4 +1,15 @@
-################################# for module/editor
+#!/usr/bin/env python
+#! -*- coding: utf-8 -*-
+
+###  
+# Copyright (c) Rice University 2012
+# This software is subject to
+# the provisions of the GNU Lesser General
+# Public License Version 2.1 (LGPL).
+# See LICENCE.txt for details.
+###
+
+
 keywd_link = Table(
     'keywd_link', Base.metadata,
     Column('user_id', String, ForeignKey('module.user_id')),
