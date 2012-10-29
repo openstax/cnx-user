@@ -1,64 +1,51 @@
+#!/usr/bin/env python
+#! -*- coding: utf-8 -*-
 
-'''
-setup.py for rhaptos2
 
-'''
+""" setup.py - rhaptos2.user
 
-from distutils.core import setup
+Author: Paul Brian
+(C) 2012 Rice University
+
+This software is subject to the provisions of the GNU Lesser General
+Public License Version 2.1 (LGPL).  See LICENSE.txt for details.
+"""
+
+from setuptools import setup, find_packages
 import os, glob
-
-def get_version():
-
-    '''return version from fixed always must exist file
-
-       Making very broad assumptions about the 
-       existence of files '''
-    
-    v = open('rhaptos2/user/version.txt').read().strip()
-    return v
+from bamboo.setuptools_version import versionlib
 
 
-
-
-def main():
-
-    setup(name='rhaptos2.user',
-          version=get_version(),
-          packages=['rhaptos2.user',
-                   ],
-          namespace_packages = ['rhaptos2'],
-          author='See AUTHORS.txt',
-          author_email='info@cnx.org',
-          url='https://github.com/Connexions/rhaptos2.user',
-          license='LICENSE.txt',
-          description='User functions for rhaptos2',
-          long_description='see description',
-          install_requires=[
-              "flask >= 0.8"
-              ,"statsd"
-              ,"requests"
-              ,"pylint"
-              ,"python-memcached"
-              ,"nose"
-              ,"rhaptos2.common"
-              ,"unittest-xml-reporting"
-              ,"mikado.oss.doctest_additions"
-                           ],
-          scripts=glob.glob('scripts/*'),
-
-          package_data={'rhaptos2.user': ['templates/*.*', 
-                                          'static/*.*', 
-                                           'version.txt', 
-                                           'tests/*.*'],
-                        },
-
-         
-
-          
-          )
-
-
-
-if __name__ == '__main__':
-    main()
+setup(
+    name='rhaptos2.user',
+    version=versionlib.get_version('.'),
+    packages=find_packages(),
+    namespace_packages=['rhaptos2'],
+    author='See AUTHORS.txt',
+    author_email='info@cnx.org',
+    url='https://github.com/Connexions/rhaptos2.user',
+    license='LICENSE.txt',
+    description="New editor / repo / system for cnx.org " \
+                "-rhaptos2.readthedocs.org",
+    install_requires=[
+        "bamboo.setuptools_version", 
+        "flask >= 0.9",
+        "statsd",
+        "requests",
+        "nose",
+        "rhaptos2.common",
+        "unittest-xml-reporting",
+        ##"mikado.oss.doctest_additions",
+        ],
+    include_package_data=True,
+    package_data={'rhaptos2.repo': ['templates/*.*',
+                                    'static/*.*',
+                                    'tests/*.*'],
+                  '':['RELEASE_VERSION',] 
+                  },
+    entry_points = """\
+[console_scripts]
+start_rhaptos2user = rhaptos2.user.run:main
+""",
+    )
 
