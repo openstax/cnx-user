@@ -28,8 +28,12 @@ from rhaptos2.common import log
 from rhaptos2.common import err
 from rhaptos2.common import conf
 
-from rhaptos2.user import get_app, dolog
+
+
+from rhaptos2.user import get_app, dolog, usermodel, backend
 app = get_app()
+
+
 
 
 @app.before_request
@@ -107,9 +111,13 @@ def get_user():
     ### .. todo:: better trap than abort()
 
     security_token = None
-    usermodel.get_user(security_token, unquoted_identifier)     
+    try:
+        json_str = usermodel.get_user(security_token, unquoted_identifier)     
+    except err.Rhaptos2Error, e:
+        abort(404)
 
-    resp = flask.make_response(stubjsondoc)
+
+    resp = flask.make_response(json_str)
     resp.content_type='application/json'
     return resp
 

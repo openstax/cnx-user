@@ -39,6 +39,8 @@ confd= {
 CONFD=confd
 
 
+usermodel.init_mod(CONFD)     
+
 def clean_dbase():
     conn = psycopg2.connect("""dbname='%(rhaptos2user_pgdbname)s'\
                              user='%(rhaptos2user_pgusername)s' \
@@ -73,7 +75,7 @@ def populate_dbase():
    
 
 def setup():
-    usermodel.init_mod(CONFD)     
+    clean_dbase() #### .. todo:: in setup / teardown use transactions and rollback please///
     populate_dbase()
         
             
@@ -93,8 +95,10 @@ def test_DbaseIsUp():
     c.execute("Select 1;")
     rs = c.fetchall()
     assert rs[0] == (1,)
+    conn.close()
 
 
+############################################################ Use SQLA now
 
 incomingd = {u'user_id': None,
  u'firstname': u'peter',
@@ -108,26 +112,21 @@ incomingd = {u'user_id': None,
 json_new_user = json.dumps(incomingd)
 
 
-@with_setup(setup, teardown)
+#@with_setup(setup, teardown)
 def test_connect2db():
     usermodel.post_user(None, json_new_user)
     
 
-@with_setup(setup, teardown)
+#@with_setup(setup, teardown)
 def test_retrieve_known_user_id():
     jsonstr = usermodel.get_user(None, "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383")
     d = json.loads(jsonstr)
     assert d['lastname'] == 'Franklin'
 
 
-@with_setup(setup, teardown)
+#@with_setup(setup, teardown)
 def test_lastname_search():
     pass
 
 
-
-
-#c.execute("SELECT * FROM public.module;")
-#rs = c.fetchall()
-#print rs
 

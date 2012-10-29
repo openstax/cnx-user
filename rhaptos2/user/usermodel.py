@@ -7,14 +7,14 @@ import pprint
 from sqlalchemy import Table, ForeignKey
 from sqlalchemy import Column, Integer, String, Text, Enum
 from sqlalchemy.orm import  relationship
+
 import backend
-from backend import Session, Base      #shared session from backend module, for pooling
+from backend import Base, Session      #shared session from backend module, for pooling
 from rhaptos2.common import conf
 from rhaptos2.common.err import Rhaptos2Error
 
 ##global
 confd = None
-
 UserSession = None
 
 ## Setup dbase backend
@@ -194,8 +194,8 @@ def post_user(security_token, json_str):
     u = populate_user(incomingd, u)
 
     ##.. todo:: Isolate these
-    Session.add(u)
-    Session.commit()
+    UserSession.add(u)
+    UserSession.commit()
     return u.user_id
 
 
@@ -205,7 +205,7 @@ def get_user(security_token, user_id):
 
     ### Now lets recreate it.
 
-    q = Session.query(User)
+    q = UserSession.query(User)
     q = q.filter(User.user_id == user_id)
     rs = q.all()
     if len(rs) == 0:
@@ -220,6 +220,10 @@ def get_user(security_token, user_id):
 def delete_user(security_token, user_id):
     """ """
     raise Rhaptos2Error("delete user not supported")
+
+
+def close_session():
+    UserSession.remove()
 
 
 #backend.engine

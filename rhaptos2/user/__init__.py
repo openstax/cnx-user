@@ -38,6 +38,7 @@ from flask import (
 
 from rhaptos2.common import conf, log, err
 
+
 import pkg_resources  # part of setuptools
 __version__ = pkg_resources.require("rhaptos2.user")[0].version
 
@@ -84,7 +85,7 @@ def set_app(app, _confd={}):
         _app.logger.addHandler(hdlr)
 
     dolog("DEBUG", "test")
-
+ 
     #allow views to use the app in decorators
     import rhaptos2.user.views
 

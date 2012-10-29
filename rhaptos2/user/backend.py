@@ -3,6 +3,19 @@
 
 """
 
+Calling structure
+
+This may seem complex (it is) but it si at least clear and avoids the usual 
+complicated waving of SQLAlchmey
+
+1. THe models exist in usermodel.
+2. The session mgmt is in backend (maybe rename)
+3. The two together should be setup in db_controller (A nod to MVC)
+   import the sesison, ise ti to save models.
+
+
+
+
 This focuses on postgres
 
 
@@ -37,11 +50,10 @@ Session = scoped_session(sessionmaker(autoflush=True,
                                       autocommit=False,))
 
 Base = declarative_base()
+
 ### As long as we subclass everything from Base, we are following
 ### ndeclarative pattern recommended
 
-engine = None
-### leave it for ad hoc queries...
 
 def connect_now(confd):
     connstr = "postgresql+psycopg2://%(rhaptos2user_pgusername)s:%(rhaptos2user_pgpassword)s@%(rhaptos2user_pghost)s/%(rhaptos2user_pgusername)s" % confd
@@ -64,15 +76,7 @@ def initdb(confd):
     
 
 
-#def is_alive(confd):
-#    
-#    m = Module(user_id='12345',title='swag',content='XXX')
-#    Session.add(m)
-#    Session.commit()
-#    print m
-
-
-
+################################# for module/editor
 keywd_link = Table(
     'keywd_link', Base.metadata,
     Column('user_id', String, ForeignKey('module.user_id')),

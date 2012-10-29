@@ -20,6 +20,8 @@ def make_app(_confd):
     app = Flask('rhaptos2.user')
     set_app(app, _confd)
     # Import the views to initialize them
+    from rhaptos2.user import backend, usermodel    
+    usermodel.init_mod(_confd)
     import rhaptos2.user.views
     return app
 
