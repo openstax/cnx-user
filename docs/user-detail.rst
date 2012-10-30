@@ -17,40 +17,29 @@ user details, and is served over a RESTful API over HTTP.
 
     Python:
 
-        user = {"id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383",
-        
-        "name":{
-                   "title": "Mr",
-                   "firstname": "Paul",
-                   "middlenames": "Richard",
-                   "lastname":    "Brian",
-                   "suffix":      "",
-                   "fullname": "Paul Brian",
-                },
-         "contact":{ 
-                   "email":   "paul@mikadosoftware.com",
-                   "homepage":  "www.mikadosoftware.com",
-                  },
-         "background":{
-                      "affiliations": [{"institution": "Rice University",
-                                        "institution_url": "www.rice.edu"
-                                        },
-                                       {"institution": "School Of Hard Knocks",
-                                        "institution_url": "www.allover.com"
-                                        },
-                                       ],
-                      "preferredlang":  "English",
-                      "otherlangs"   :  ["BadEnglish",  "DrunkenEnglish"],
-                      "location"     :  "UK",
-                      "interests"    :  ["ridin", "shootin", "fishin"],
-                      "recommendations": [],
-                      "biography"    :  "I was born at a very early age.",
-                      "imageurl"        : "www.cnx.org/userimages/org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383",
-                      
+        user = {
+        "user_id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383",
+        "title": "Mr",
+	"firstname": "Paul",
+	"middlenames": "Richard",
+	"lastname":    "Brian",
+	"suffix":      "",
+	"fullname": "Paul Brian",
 
-         }
+        "email":   "paul@mikadosoftware.com",
+        "homepage":  "www.mikadosoftware.com",
+ 
+       "affiliation-institution": "Rice University",
+       "affiliation-institution_url": "www.rice.edu"
+       "preferredlang":  "English",
+       "otherlangs"   :  "BadEnglish",
+       "location"     :  "UK",
+       "interests"    :  "ridin",
+       "recommendations": [],
+       "biography"    :  "I was born at a very early age.",
+       "imageurl"        : "www.cnx.org/userimages/org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383",
 
-        "identifiers": ["https://www.google.com/accounts/o8/id?id=AItOawlc7oYk8MNlwBgxCwMhLDqzXq1BXA4abbk",                    "http://openid.cnx.org/pbrian",
+        "identifiers": ["http://openid.cnx.org/pbrian",
                         "paul@mikadosoftware.com"],
         "version": "0.0.1"
         }
@@ -61,50 +50,31 @@ user details, and is served over a RESTful API over HTTP.
 
 As JSON::
 
-    {
-	"background": {
-	    "affiliations": [
-		{
-		    "institution": "Rice University", 
-		    "institution_url": "www.rice.edu"
-		}, 
-		{
-		    "institution": "School Of Hard Knocks", 
-		    "institution_url": "www.allover.com"
-		}
-	    ], 
-	    "biography": "I was born at a very early age.", 
-	    "imageurl": "www.cnx.org/userimages/org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383", 
-	    "interests": [
-		"ridin", 
-		"shootin", 
-		"fishin"
-	    ], 
-	    "location": "UK", 
-	    "otherlangs": [
-		"BadEnglish", 
-		"DrunkenEnglish"
-	    ], 
-	    "preferredlang": "English", 
-	    "recommendations": []
-	}, 
-	"contact": {
-	    "email": "paul@mikadosoftware.com", 
-	    "homepage": "www.mikadosoftware.com"
-	}, 
-	"id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383", 
-	"identifiers": [
-	    "https://www.google.com/accounts/o8/id?id=AItOawlc7oYk8MNlwBgxCwMhLDqzXq1BXA4abbk", 
-	    "http://openid.cnx.org/pbrian", 
-	    "paul@mikadosoftware.com"
-	], 
-	"name": {
-	    "firstname": "Paul", 
-	    "fullname": "Paul Brian", 
-	    "lastname": "Brian", 
-	    "middlenames": "Richard", 
-	    "suffix": "", 
-	    "title": "Mr"
-	}, 
-	"version": "0.0.1"
-    }
+{
+    "affiliation-institution": "Rice University", 
+    "affiliation-institution_url": "www.rice.edu", 
+    "biography": "I was born at a very early age.", 
+    "email": "paul@mikadosoftware.com", 
+    "firstname": "Paul", 
+    "fullname": "Paul Brian", 
+    "homepage": "www.mikadosoftware.com", 
+    "identifiers": [
+        "http://openid.cnx.org/pbrian", 
+        "paul@mikadosoftware.com"
+    ], 
+    "imageurl": "www.cnx.org/userimages/org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383", 
+    "interests": "ridin and shootin", 
+    "lastname": "Brian", 
+    "location": "UK", 
+    "middlenames": "Richard", 
+    "otherlangs": "BadEnglish", 
+    "preferredlang": "English", 
+    "recommendations": [], 
+    "suffix": "", 
+    "title": "Mr", 
+    "user_id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383", 
+    "version": "0.0.1"
+}
+
+
+Due to limitations with the current SQLAlchemy model, I have limited the number of x:m realationships in the profile to the one most important - identifiers.
