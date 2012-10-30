@@ -50,7 +50,7 @@ user details, and is served over a RESTful API over HTTP.
 
 As JSON::
 
-{
+ {
     "affiliation-institution": "Rice University", 
     "affiliation-institution_url": "www.rice.edu", 
     "biography": "I was born at a very early age.", 
@@ -74,7 +74,7 @@ As JSON::
     "title": "Mr", 
     "user_id": "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383", 
     "version": "0.0.1"
-}
+ }
 
 
 Due to limitations with the current SQLAlchemy model, I have limited the number of x:m realationships in the profile to the one most important - identifiers.
