@@ -128,7 +128,7 @@ json_new_user = json.dumps(incomingd)
 
 @with_setup(setup, teardown)
 def test_can_add_user():
-    new_user_id = usermodel.post_user(None, json_new_user)
+    new_user_id = usermodel.post_user(None, incomingd)
     
 
 
