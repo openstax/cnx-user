@@ -11,6 +11,21 @@
 
 
 """
+usermodel.py
+
+Represents the SQLALchemy classes and assoc functions, that store user
+details in web server, and persist to postgres dbase.
+
+We have two main models :py:class:User and :py:class:Identifier.
+One User may have many identifiers, but one identifier may only have
+one User.  Each identier is either a openid or a persona.
+
+A user_id is a urn of form <domain_of_originating_repo>-<uuid(4)>
+"org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383"
+
+
+
+
 """
 import json
 import uuid
@@ -34,11 +49,26 @@ class User(Base):
     """
     __tablename__ = "user" 
     
-    user_id     = Column(String, primary_key=True)
-    firstname   = Column(String)
-    middlename  = Column(String)
-    lastname    = Column(String)
-    
+    user_id                      = Column(String, primary_key=True)
+    title                        = Column(String)
+    firstname                    = Column(String)
+    middlename                   = Column(String)
+    lastname                     = Column(String)
+    suffix                       = Column(String)
+    fullname                     = Column(String)
+    interests                    = Column(String)
+    affiliationinstitution_url   = Column(String)
+    affiliationinstitution       = Column(String)
+    preferredlang                = Column(String)
+    otherlangs                   = Column(String)
+    imageurl                     = Column(String)
+    location                     = Column(String)
+    biography                    = Column(String)
+    recommendations              = Column(String)
+    homepage                     = Column(String)
+    email                        = Column(String)
+    version                      = Column(String)
+         
     identifier  = relationship("Identifier")
 
     def __init__(self, user_id=None, **kwds):
@@ -51,6 +81,7 @@ class User(Base):
 
         for k in kwds:
             self.__dict__[k] = kwds[k]  #.. todo:: dangerous !!
+
         ##.. todo:: check for failure to provide user_id
 
     def row_as_dict(self):
@@ -66,8 +97,6 @@ class User(Base):
 
     def set_new_id(self):
         """If we are new user, be able to create uuid 
-
-
        
         ### .. todo: A new User() autosets uuid. Is this correct
         ### behaviour?
@@ -83,6 +112,7 @@ class User(Base):
         uid = uuid.uuid4()
         self.user_id =  "org.cnx.user-" + str(uid)
         return self.user_id
+
 
 class Identifier(Base):
     """The external-to-cnx, globally unique identifer string that 
@@ -101,6 +131,7 @@ class Identifier(Base):
         """ """
         self.identifierstring =identifierstring
         self.identifiertype = identifiertype
+        
         
     def row_as_dict(self):
         """Return the """
@@ -157,7 +188,7 @@ def populate_user(incomingd, userobj):
     ### put every key in json into User(), manually handling Identifier
     for k in incomingd:
         if k in ('user_id'): continue #.. todo:: test for user_id in a POST 
-        if k not in (u'identifier',): ## a poor manual approach...
+        if k not in (u'identifier', u'identifiers'): ## a poor manual approach...
             setattr(userobj, k, incomingd[k])
         else:
             ### create a list of Identifer objects from the list of identifier strings in JSON
@@ -215,6 +246,29 @@ def get_user(security_token, user_id):
     newu = rs[0]
     newu_asdict = newu.row_as_dict()
     return json.dumps(newu_asdict)
+
+def get_user_by_identifier(unquoted_id):
+    """ """
+
+    ### Now lets recreate it.
+
+    q = db_session.query(Identifier)
+    q = q.filter(Identifier.identifierstring == unquoted_id)
+    rs = q.all()
+
+    if len(rs) == 0:
+        raise Rhaptos2Error("Identifer ID Not found in this repo")
+    if len(rs) > 1:
+        raise Rhaptos2Error("Too many matches")
+
+    print rs    
+
+    user_id = rs[0].user_id
+    newu = get_user(None, user_id)#now look her up again
+    #.. todo:: this is rubbish - get_user should return a user obj
+    #newu_asdict = newu.row_as_dict()
+    return newu #json.dumps(newu_asdict)
+
 
 def delete_user(security_token, user_id):
     """ """

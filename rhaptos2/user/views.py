@@ -50,6 +50,38 @@ def index():
     return "This is the USer Database for CNX"
 
 
+@app.route('/openid/', methods=["GET",])
+def get_user_by_identifier():
+    """ """
+    qstr = request.query_string
+    
+
+    unquoted_identifier = qstr.replace("user=", "")
+    unquoted_identifier = urllib.unquote(unquoted_identifier)
+    dolog("INFO", "THis is request %s" % g.requestid)
+    dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
+
+
+    dolog("INFO", "THis is request %s" % g.requestid)
+    dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
+    print "A" + unquoted_identifier
+    print "B" + urllib.unquote(unquoted_identifier)
+
+
+    ### errors to abort function
+    ### .. todo:: better trap than abort()
+
+    security_token = None
+    try:
+        json_str = usermodel.get_user_by_identifier(unquoted_identifier)     
+    except err.Rhaptos2Error, e:
+        abort(404)
+
+    resp = flask.make_response(json_str)
+    resp.content_type='application/json'
+    return resp
+
+    
 @app.route('/user/', methods=["GET",])
 def get_user():
     """
@@ -84,7 +116,8 @@ def get_user():
 
     dolog("INFO", "THis is request %s" % g.requestid)
     dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
-
+    print "A" + unquoted_identifier
+    print "B" + urllib.unquote(unquoted_identifier)
     ### errors to abort function
     ### .. todo:: better trap than abort()
 
