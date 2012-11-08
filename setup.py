@@ -4,18 +4,23 @@ setup.py for rhaptos2
 
 '''
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 import os, glob
 
 def get_version():
-
-    '''return version from fixed always must exist file
-
-       Making very broad assumptions about the 
-       existence of files '''
+    """ return a version number, or error string.
     
-    v = open('rhaptos2/user/version.txt').read().strip()
+    We are assuming a file version.txt always exists. By convention
+    populate that file with output of git describe
+    """
+
+    try:
+        v = open("version.txt").read().strip()
+    except:
+        v = "UNABLE_TO_FIND_RELEASE_VERSION_FILE"
     return v
+
+
 
 
 
@@ -45,16 +50,15 @@ def main():
               ,"mikado.oss.doctest_additions"
                            ],
           scripts=glob.glob('scripts/*'),
-
           package_data={'rhaptos2.user': ['templates/*.*', 
                                           'static/*.*', 
-                                           'version.txt', 
                                            'tests/*.*'],
                         },
+    entry_points = """\
+[console_scripts]
+run_rhaptos2user.py = rhaptos2.user.run:main
+"""
 
-         
-
-          
           )
 
 
