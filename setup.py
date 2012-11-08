@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#! -*- coding: utf-8 -*-
 
 '''
 setup.py for rhaptos2
@@ -21,13 +23,7 @@ def get_version():
     return v
 
 
-
-
-
-
-def main():
-
-    setup(name='rhaptos2.user',
+setup(name='rhaptos2.user',
           version=get_version(),
           packages=['rhaptos2.user',
                    ],
@@ -61,8 +57,4 @@ run_rhaptos2user.py = rhaptos2.user.run:main
 
           )
 
-
-
-if __name__ == '__main__':
-    main()
 
