@@ -270,6 +270,30 @@ def get_user_by_identifier(unquoted_id):
     return newu #json.dumps(newu_asdict)
 
 
+def sanitise_usersql(sqlfrag):
+    """ """
+    dodgy = [";","SELECT"]
+    for d in dodgy:
+        if d.upper() in sqlfrag:
+            raise Exception("Potential SQL Injhection - %s" % sqlfrag)
+    return sqlfrag
+
+def get_user_by_name(namefrag):
+    """ FOr search functionality"""
+
+    sanitise_usersql(namefrag)
+    q = db_session.query(User)
+    q = q.filter(User.fullname.like("%%%s%%" % namefrag)
+    rs = q.all()
+
+    out_l = []
+    for row in rs:
+        out_l.append(User(row.user_id))
+
+    return out_l
+
+
+
 def delete_user(security_token, user_id):
     """ """
     raise Rhaptos2Error("delete user not supported")
