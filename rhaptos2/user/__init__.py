@@ -132,6 +132,7 @@ def dolog(lvl, msg, caller=None, statsd=None):
     except Exception, e:
         print extra, msg, e
 
+
 def set_up_logging(app):
     """Set up the logging within the application.
 
@@ -163,3 +164,4 @@ def set_up_logging(app):
     # Set the handlers on the application.
     for handler in (statsd_handler, stream_handler,):
         app.logger.addHandler(handler)
+
