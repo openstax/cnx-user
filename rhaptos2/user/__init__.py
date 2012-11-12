@@ -47,6 +47,15 @@ APPTYPE = 'rhaptos2user'
 VERSION = __version__
 _app = None
 
+
+"""
+Instantiation 
+
+
+
+"""
+
+
 def get_app():
     """Get the application object"""
     global _app

@@ -25,6 +25,7 @@ def main():
     """Run the application, to be used to start up one instance"""
     runner.main(make_app)
 
+
 if __name__ == '__main__':
     main()
 
