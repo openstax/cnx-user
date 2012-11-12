@@ -75,7 +75,7 @@ def connect_now(confd):
 def initdb(confd):
 
     global db_session    
-    engine = connect_now(confd)
+    engine = connect_now(confd['rhaptos2user'])
     db_session.configure(bind=engine) 
     Base.metadata.create_all(engine)    
     

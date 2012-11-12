@@ -74,6 +74,7 @@ def make_app(config):
 
     set_up_logging(app)
 
+
     # Set the application
     app = set_app(app)
 
@@ -137,7 +138,7 @@ def dolog(lvl, msg, caller=None, statsd=None):
 
 
     try:
-        _app.logger.log(goodlvl, msg, extra=extra)
+        app.logger.log(goodlvl, msg, extra=extra)
     except Exception, e:
         print extra, msg, e
 

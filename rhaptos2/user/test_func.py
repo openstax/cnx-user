@@ -33,7 +33,7 @@ def test_post_new_user():
     """ """
     headers = {'content-type': 'application/json'}
     payload = json.dumps(new_user_dict)
-    url = "http://localhost:8001/user/"
+    url = "http://localhost:5000/user/"
     r = requests.post(url, data=payload, headers=headers)
 
     print r.text
