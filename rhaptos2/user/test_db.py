@@ -10,14 +10,14 @@
 ###
 
 
-from rhaptos2.user import usermodel
+
 import psycopg2
 from nose import with_setup
 import json
 
 from rhaptos2.common import conf
 CONFD=conf.get_config("../../local.ini")
-from rhaptos2.user import backend
+from rhaptos2.user import backend, usermodel
 backend.initdb(CONFD)  #only do thios once per applicaiton not per test
 
 
@@ -38,7 +38,7 @@ def clean_dbase():
     c = conn.cursor()
     c.execute("TRUNCATE TABLE public.identifier CASCADE;")
     conn.commit()
-    c.execute("TRUNCATE TABLE public.user CASCADE;")
+    c.execute("TRUNCATE TABLE public.cnxuser CASCADE;")
     conn.commit()
     conn.close()
 
