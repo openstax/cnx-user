@@ -294,6 +294,21 @@ def get_user_by_name(namefrag):
 
     return out_l
 
+def get_all_users():
+    """ FOr search functionality"""
+
+
+    q = db_session.query(User)
+    rs = q.all()
+    out_l = []
+    c = 0
+    for row in rs:
+        out_l.append(row)
+        c += 1
+        if c >= 25: break
+    # ..todo:: the worst limiting case ever... 
+    return out_l
+
 
 
 def delete_user(security_token, user_id):

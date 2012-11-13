@@ -145,3 +145,16 @@ def view_post_user():
     db_session.add(u)
     db_session.commit()
     return "Saved"
+
+@app.route('/users/', methods=["GET",])
+def view_post_user():
+    """ """
+    ###
+    
+    rs = usermodel.get_all_users()
+    users = [u.row_as_dict() for u in rs]
+    json_str = json.dumps(users)
+    resp = flask.make_response(json_str)
+    resp.content_type='application/json'
+    return resp
+
