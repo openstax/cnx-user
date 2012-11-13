@@ -47,7 +47,7 @@ class User(Base):
 
     
     """
-    __tablename__ = "user" 
+    __tablename__ = "cnxuser" 
     
     user_id                      = Column(String, primary_key=True)
     title                        = Column(String)
@@ -69,7 +69,7 @@ class User(Base):
     email                        = Column(String)
     version                      = Column(String)
          
-    identifier  = relationship("Identifier")
+    identifiers  = relationship("Identifier")
 
     def __init__(self, user_id=None, **kwds):
         """ """
@@ -90,9 +90,9 @@ class User(Base):
         for col in self.__table__.columns:
             d[col.name] = self.__dict__[col.name]
 
-        d['identifier'] = [] 
-        for i in self.identifier: 
-            d['identifier'].append(i.row_as_dict())
+        d['identifiers'] = [] 
+        for i in self.identifiers: 
+            d['identifiers'].append(i.row_as_dict())
         return d
 
     def set_new_id(self):
@@ -120,16 +120,16 @@ class Identifier(Base):
        from a thrid party to us, the relying party.
 
     """
-    __tablename__   = "identifier"
+    __tablename__   = "cnxidentifier"
 
     identifierstring = Column(String, primary_key=True)
-    identifiertype   = Column(String)                      # (Enum, "persona", "openid")
-    user_id          = Column(String, ForeignKey("user.user_id"))
+    identifiertype   = Column(String)  # (Enum, "persona", "openid")
+    user_id          = Column(String, ForeignKey("cnxuser.user_id"))
     
     
     def __init__(self, identifierstring=None, identifiertype=None):
         """ """
-        self.identifierstring =identifierstring
+        self.identifierstring = identifierstring
         self.identifiertype = identifiertype
         
         
