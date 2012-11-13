@@ -182,29 +182,32 @@ def put_user(security_token, json_str, user_id):
     pass
 
 def populate_user(incomingd, userobj):
+
     """not quite clear the benefits of this one apart form testing
        feel need to work with parser mpore"""
 
-    ### put every key in json into User(), manually handling Identifier
+    ### put every key in json into User(), manually handling
+    ### Identifier
     for k in incomingd:
         if k in ('user_id'): continue #.. todo:: test for user_id in a POST 
         if k not in (u'identifier', u'identifiers'): ## a poor manual approach...
             setattr(userobj, k, incomingd[k])
         else:
-            ### create a list of Identifer objects from the list of identifier strings in JSON
+            ### create a list of Identifer objects from the list of
+            ### identifier strings in JSON
             l = incomingd[k]
             outl =  mkobjfromlistofdict(Identifier, l)
-            userobj.identifier = outl
+            userobj.identifiers = outl
 
     return userobj
     
 
 def post_user(security_token, json_dict):
-    """Given a user_id, and a json_str representing the complete set of fields
-       then update those fields for that user_id 
+    """Given a user_id, and a json_str representing the complete set
+       of fields then update those fields for that user_id
 
-    I am getting a dictionary direct form Flask request object -
-    want to handle that myself with parser.
+    I am getting a dictionary direct form Flask request object - want
+    to handle that myself with parser.
 
     returns User object, for later saveing to DB"""
 
@@ -263,15 +266,14 @@ def get_user_by_identifier(unquoted_id):
 
     print rs    
 
+    #.. todo:: stop using indexes on rows - transform to fieldnames
     user_id = rs[0].user_id
     newu = get_user(None, user_id)#now look her up again
-    #.. todo:: this is rubbish - get_user should return a user obj
-    #newu_asdict = newu.row_as_dict()
-    return newu #json.dumps(newu_asdict)
+    return newu 
 
 
 def sanitise_usersql(sqlfrag):
-    """ """
+    """ More of a reminder than actual good practise"""
     dodgy = [";","SELECT"]
     for d in dodgy:
         if d.upper() in sqlfrag:
