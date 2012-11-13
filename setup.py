@@ -44,7 +44,6 @@ setup(name='rhaptos2.user',
               ,"rhaptos2.common"
               ,"unittest-xml-reporting"
               ],
-          scripts=glob.glob('scripts/*'),
           package_data={'rhaptos2.user': ['templates/*.*', 
                                           'static/*.*', 
                                            'tests/*.*'],
