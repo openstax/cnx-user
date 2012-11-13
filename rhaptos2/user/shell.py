@@ -12,17 +12,28 @@
 
 from rhaptos2.user import backend, usermodel
 from rhaptos2.user.backend import db_session
-
-shell_conf = { 'rhaptos2user_pgdbname': 'repouser',
- 'rhaptos2user_pghost': 'devlog.office.mikadosoftware.com',
- 'rhaptos2user_pgpassword': 'pass1',
- 'rhaptos2user_pgpoolsize': '5',
- 'rhaptos2user_pgusername': 'repouser'}
-
-backend.initdb(shell_conf)
+from rhaptos2.common import conf
+confd = conf.get_config("../../local.ini")
 
 
+backend.initdb(confd)
+
+print confd['rhaptos2user']
 print "You are now in shall, without access to Flask APp, bnut with dbase"
+
+u = usermodel.User()
+u.fullname="Test Rhaptos user"
+
+
+i = usermodel.Identifier()
+i.identifierstring = 'http://rhaptos2user.myopenid.com/'
+i.identifiertype = 'openid'
+i.user_id = u.user_id
+u.identifiers=[i,]
+
+db_session.add(u)
+db_session.commit()
+
 
 
 
