@@ -16,25 +16,29 @@ However, SQLAlchemy is designed to help avoid these issues, and as such it passe
 LIKE term not as part of a string but as a bindparam (escaped 
 
 
-Short answer:
+WOrked Example
+--------------
+
+Firstly, we use `Little Bobby Tables <http://http://xkcd.com/327/>`_ to force a likely error:: 
 
     >>> x = q.filter(usermodel.User.fullname.like("%user%'; DROP TABLE identifier;"))
     >>> rs = x.all()
 
-echo from SA
+echo from SA::
 
     INFO:sqlalchemy.engine.base.Engine:SELECT cnxuser.user_id AS
     ...
     FROM cnxuser 
     WHERE cnxuser.fullname LIKE %(fullname_1)s
-    2012-11-14 13:14:35,954 INFO sqlalchemy.engine.base.Engine {'fullname_1': "%user%'; 
-    DROP TABLE identifier;"}
+    2012-11-14 13:14:35,954 INFO sqlalchemy.engine.base.Engine {'fullname_1': "%user%'; DROP TABLE identifier;"}
+
   
-postgresql log
+postgresql log::
 
     mail, cnxuser.version AS cnxuser_version 
     FROM cnxuser 
     WHERE cnxuser.fullname LIKE '%user%''; DROP TABLE identifier;'
+                                       ^^^
 
 Summary
 -------
