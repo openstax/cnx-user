@@ -65,11 +65,12 @@ def make_app(config):
 
     set_up_logging(app)
 
+    # Set the application
+    app = set_app(app)
+
     # Initialize the views
     from rhaptos2.user import views
 
-    # Set the application
-    app = set_app(app)
     return app
 
 def dolog(lvl, msg, caller=None, statsd=None):
