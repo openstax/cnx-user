@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #! -*- coding: utf-8 -*-
 
-###  
+###
 # Copyright (c) Rice University 2012
 # This software is subject to
 # the provisions of the GNU Lesser General
@@ -49,7 +49,7 @@ _app = None
 
 
 """
-Instantiation 
+Instantiation
 
 Now using a "appfactory" - sanity from pumazi
 
@@ -86,7 +86,7 @@ def set_app(app, _confd={}):
         _app.logger.addHandler(hdlr)
 
     dolog("DEBUG", "test")
- 
+
     #allow views to use the app in decorators
     import rhaptos2.user.views
 
@@ -169,7 +169,7 @@ def set_logger(apptype, _confd):
 
     stream_hdlr = logging.StreamHandler()
 
-    ## formatters - reduced this as bug #39 prevents extra being used. 
+    ## formatters - reduced this as bug #39 prevents extra being used.
 #    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s  - %(request_id)s - %(user_id)s - %(message)s')
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s  - %(message)s')
 
@@ -177,13 +177,3 @@ def set_logger(apptype, _confd):
     stats_hdlr.setFormatter(formatter)
 
     return (stream_hdlr, stats_hdlr)
-
-
-
-
-
-
-
-
-
-
