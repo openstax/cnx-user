@@ -79,7 +79,6 @@ def set_app(app, _confd={}):
     global _app
     _app = app
 
-    #.. todo:: why not pass confd around all time instead of app.config???
     _app.config.update(_confd)
     hdlrs = set_logger(APPTYPE, _confd)
     for hdlr in hdlrs:
