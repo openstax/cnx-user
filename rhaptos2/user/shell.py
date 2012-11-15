@@ -17,10 +17,20 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 CONFD_PATH = os.path.join(HERE, "../../local.ini")
 confd = conf.get_config(CONFD_PATH)
 
-backend.initdb(confd)
+
+from rhaptos2.common.configuration import (
+    find_configuration_file,
+    Configuration,
+    )
+config = Configuration.from_file(CONFD_PATH)
+
+
+
+
+backend.initdb(config)
 
 print "Connecting to Database:"
-print confd['rhaptos2user']
+print config['pghost']
 print "You are now in shell, without access to Flask App, but with dbase"
 print "You may want to review prepopulate.py for notes on prepopulating the dbase during development"
 
