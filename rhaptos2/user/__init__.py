@@ -47,15 +47,6 @@ APPTYPE = 'rhaptos2user'
 VERSION = __version__
 _app = None
 
-
-"""
-Instantiation 
-
-
-
-"""
-
-
 def get_app():
     """Get the application object"""
     global _app
@@ -139,10 +130,9 @@ def dolog(lvl, msg, caller=None, statsd=None):
 
 
     try:
-        app.logger.log(goodlvl, msg, extra=extra)
+        _app.logger.log(goodlvl, msg, extra=extra)
     except Exception, e:
         print extra, msg, e
-
 
 def set_up_logging(app):
     """Set up the logging within the application.
@@ -175,4 +165,3 @@ def set_up_logging(app):
     # Set the handlers on the application.
     for handler in (statsd_handler, stream_handler,):
         app.logger.addHandler(handler)
-
