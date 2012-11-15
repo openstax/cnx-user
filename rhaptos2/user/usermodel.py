@@ -47,7 +47,7 @@ class User(Base):
 
     
     """
-    __tablename__ = "user" 
+    __tablename__ = "cnxuser" 
     
     user_id                      = Column(String, primary_key=True)
     title                        = Column(String)
@@ -69,7 +69,7 @@ class User(Base):
     email                        = Column(String)
     version                      = Column(String)
          
-    identifier  = relationship("Identifier")
+    identifiers  = relationship("Identifier")
 
     def __init__(self, user_id=None, **kwds):
         """ """
@@ -90,9 +90,9 @@ class User(Base):
         for col in self.__table__.columns:
             d[col.name] = self.__dict__[col.name]
 
-        d['identifier'] = [] 
-        for i in self.identifier: 
-            d['identifier'].append(i.row_as_dict())
+        d['identifiers'] = [] 
+        for i in self.identifiers: 
+            d['identifiers'].append(i.row_as_dict())
         return d
 
     def set_new_id(self):
@@ -120,16 +120,16 @@ class Identifier(Base):
        from a thrid party to us, the relying party.
 
     """
-    __tablename__   = "identifier"
+    __tablename__   = "cnxidentifier"
 
     identifierstring = Column(String, primary_key=True)
-    identifiertype   = Column(String)                      # (Enum, "persona", "openid")
-    user_id          = Column(String, ForeignKey("user.user_id"))
+    identifiertype   = Column(String)  # (Enum, "persona", "openid")
+    user_id          = Column(String, ForeignKey("cnxuser.user_id"))
     
     
     def __init__(self, identifierstring=None, identifiertype=None):
         """ """
-        self.identifierstring =identifierstring
+        self.identifierstring = identifierstring
         self.identifiertype = identifiertype
         
         
@@ -182,29 +182,32 @@ def put_user(security_token, json_str, user_id):
     pass
 
 def populate_user(incomingd, userobj):
+
     """not quite clear the benefits of this one apart form testing
        feel need to work with parser mpore"""
 
-    ### put every key in json into User(), manually handling Identifier
+    ### put every key in json into User(), manually handling
+    ### Identifier
     for k in incomingd:
         if k in ('user_id'): continue #.. todo:: test for user_id in a POST 
         if k not in (u'identifier', u'identifiers'): ## a poor manual approach...
             setattr(userobj, k, incomingd[k])
         else:
-            ### create a list of Identifer objects from the list of identifier strings in JSON
+            ### create a list of Identifer objects from the list of
+            ### identifier strings in JSON
             l = incomingd[k]
             outl =  mkobjfromlistofdict(Identifier, l)
-            userobj.identifier = outl
+            userobj.identifiers = outl
 
     return userobj
     
 
 def post_user(security_token, json_dict):
-    """Given a user_id, and a json_str representing the complete set of fields
-       then update those fields for that user_id 
+    """Given a user_id, and a json_str representing the complete set
+       of fields then update those fields for that user_id
 
-    I am getting a dictionary direct form Flask request object -
-    want to handle that myself with parser.
+    I am getting a dictionary direct form Flask request object - want
+    to handle that myself with parser.
 
     returns User object, for later saveing to DB"""
 
@@ -263,11 +266,49 @@ def get_user_by_identifier(unquoted_id):
 
     print rs    
 
+    #.. todo:: stop using indexes on rows - transform to fieldnames
     user_id = rs[0].user_id
     newu = get_user(None, user_id)#now look her up again
-    #.. todo:: this is rubbish - get_user should return a user obj
-    #newu_asdict = newu.row_as_dict()
-    return newu #json.dumps(newu_asdict)
+    return newu 
+
+
+def sanitise_usersql(sqlfrag):
+    """ More of a reminder than actual good practise"""
+    dodgy = [";","SELECT"]
+    for d in dodgy:
+        if d.upper() in sqlfrag:
+            raise Exception("Potential SQL Injhection - %s" % sqlfrag)
+    return sqlfrag
+
+def get_user_by_name(namefrag):
+    """ FOr search functionality"""
+
+    sanitise_usersql(namefrag)
+    q = db_session.query(User)
+    q = q.filter(User.fullname.like("%%%s%%" % namefrag))
+    rs = q.all()
+
+    out_l = []
+    for row in rs:
+        out_l.append(User(row.user_id))
+
+    return out_l
+
+def get_all_users():
+    """ FOr search functionality"""
+
+
+    q = db_session.query(User)
+    rs = q.all()
+    out_l = []
+    c = 0
+    for row in rs:
+        out_l.append(row)
+        c += 1
+        if c >= 25: break
+    # ..todo:: the worst limiting case ever... 
+    return out_l
+
 
 
 def delete_user(security_token, user_id):

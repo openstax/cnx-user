@@ -38,7 +38,7 @@ from flask import (
     )
 
 from rhaptos2.common import conf, log, err
-
+from rhaptos2.user import backend
 
 import pkg_resources  # part of setuptools
 __version__ = pkg_resources.require("rhaptos2.user")[0].version
@@ -68,6 +68,8 @@ def make_app(config):
     # Set the application
     app = set_app(app)
 
+    print config
+    backend.initdb(config)    
     # Initialize the views
     from rhaptos2.user import views
 

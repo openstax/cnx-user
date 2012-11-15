@@ -10,51 +10,19 @@
 ###
 
 
-from rhaptos2.user import usermodel
+
 import psycopg2
 from nose import with_setup
 import json
 
-confd= {
- 'bamboo_appnamespace': 'rhaptos2repo',
- 'bamboo_archive_root': '/tmp/cnx/archive',
- 'bamboo_code_root': '/home/pbrian/src/rhaptos2.repo',
- 'bamboo_confdir': '/tmp/confdir',
- 'bamboo_deployagent': 'deployagent',
- 'bamboo_deployagent_keypath': '/home/pbrian/.ssh/deployagent',
- 'bamboo_install_to': 'www.frozone.mikadosoftware.com::www.frozone.mikadosoftware.com',
- 'bamboo_logserverfqdn': 'log.frozone.mikadosoftware.com',
- 'bamboo_logserverport': '5147',
- 'bamboo_modusdir': '/home/pbrian/src/bamboo.recipies/recipies/',
- 'bamboo_remote_build_root': '/home/deployagent/',
- 'bamboo_stage_root': '/tmp/cnx/stage/rhaptos2.repo',
- 'bamboo_userserver': 'http://www.frozone.mikadosoftware.com:81/user',
- 'bamboo_venvpath': '/tmp/cnx/venv/t1',
- 'bamboo_www_server_root': '/usr/share/www/nginx/www',
- 'bamboo_xunitfilepath': '/tmp/cnx/nosetests.xml',
-
- 'rhaptos2user_cdn_server_name': 'localhost:5000',
- 'rhaptos2user_loglevel': 'DEBUG',
-
-
- 'rhaptos2user_pgdbname': 'repouser',
- 'rhaptos2user_pghost': 'devlog.office.mikadosoftware.com',
- 'rhaptos2user_pgpassword': 'pass1',
- 'rhaptos2user_pgpoolsize': '5',
- 'rhaptos2user_pgusername': 'repouser',
- 'rhaptos2user_statsd_host': 'log.frozone.mikadosoftware.com',
- 'rhaptos2user_statsd_port': '8125',
- 'rhaptos2user_use_logging': 'Y',
- 'rhaptos2user_www_server_name': 'localhost:5000'}
-
-
-CONFD=confd
-from rhaptos2.user import backend
+from rhaptos2.common import conf
+CONFD=conf.get_config("../../local.ini")
+from rhaptos2.user import backend, usermodel
 backend.initdb(CONFD)  #only do thios once per applicaiton not per test
 
 
 def setup():
-    clean_dbase() #### .. todo:: in setup / teardown use transactions and rollback please///
+    clean_dbase() #### .. todo:: in setup / teardown use rollback please
     populate_dbase()
 
             
@@ -63,14 +31,14 @@ def teardown():
 
 
 def clean_dbase():
-    conn = psycopg2.connect("""dbname='%(rhaptos2user_pgdbname)s'\
-                             user='%(rhaptos2user_pgusername)s' \
-                             host='%(rhaptos2user_pghost)s' \
-                             password='%(rhaptos2user_pgpassword)s'""" % CONFD);
+    conn = psycopg2.connect("""dbname='%(pgdbname)s'\
+                             user='%(pgusername)s' \
+                             host='%(pghost)s' \
+                             password='%(pgpassword)s'""" % CONFD["rhaptos2user"]);
     c = conn.cursor()
     c.execute("TRUNCATE TABLE public.identifier CASCADE;")
     conn.commit()
-    c.execute("TRUNCATE TABLE public.user CASCADE;")
+    c.execute("TRUNCATE TABLE public.cnxuser CASCADE;")
     conn.commit()
     conn.close()
 
@@ -101,10 +69,10 @@ def populate_dbase():
 
 def test_DbaseIsUp():
     """ """
-    conn = psycopg2.connect("""dbname='%(rhaptos2user_pgdbname)s'\
-                             user='%(rhaptos2user_pgusername)s' \
-                             host='%(rhaptos2user_pghost)s' \
-                             password='%(rhaptos2user_pgpassword)s'""" % CONFD);
+    conn = psycopg2.connect("""dbname='%(pgdbname)s'\
+                             user='%(pgusername)s' \
+                             host='%(pghost)s' \
+                             password='%(pgpassword)s'""" % CONFD["rhaptos2user"]);
     c = conn.cursor()
     c.execute("Select 1;")
     rs = c.fetchall()
