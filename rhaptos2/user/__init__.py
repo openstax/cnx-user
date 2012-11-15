@@ -1,24 +1,24 @@
-#!/usr/bin/env python
-#! -*- coding: utf-8 -*-
-
-###  
+# -*- coding: utf-8 -*-
+###
 # Copyright (c) Rice University 2012
 # This software is subject to
 # the provisions of the GNU Lesser General
 # Public License Version 2.1 (LGPL).
 # See LICENCE.txt for details.
 ###
+"""Rhaptos user profile web application
 
+The application is initialized using the application factory (`make_app`).
 
-"""__init__.py (rhaptos.repo) - Rhaptos application package
+To acquire the application from anywhere in this package or extra packages,
+use the `get_app` function.
 
-Author: Paul Brian
-(C) 2012 Rice University
+Author: Paul Brian, Michael Mulich
+Copyright (c) 2012 Rice University
 
 This software is subject to the provisions of the GNU Lesser General
 Public License Version 2.1 (LGPL).  See LICENSE.txt for details.
 """
-
 import os
 import sys
 import datetime
@@ -47,52 +47,31 @@ APPTYPE = 'rhaptos2user'
 VERSION = __version__
 _app = None
 
-
-"""
-Instantiation 
-
-Now using a "appfactory" - sanity from pumazi
-
-  from rhaptos2.user import set_app
-  confd = rhaptos2.common.conf.get_config(["rhaptos2user", "bamboo"])
-  _app = Flask("rhaptos2.user")
-  set_app(_app, confd)
-
-  ###now global _app in __init__ is a Flask app
-  ### then app = get_app() in any module will
-  ### put it into glboal module namespave for ease each time
-
-
-"""
-
-
-
 def get_app():
     """Get the application object"""
     global _app
     return _app
 
-def set_app(app, _confd={}):
-    """Set the global application object
-
-    """
+def set_app(app):
+    """Set the global application object"""
     global _app
     _app = app
-
-    #.. todo:: why not pass confd around all time instead of app.config???
-    _app.config.update(_confd)
-    hdlrs = set_logger(APPTYPE, _confd)
-    for hdlr in hdlrs:
-        _app.logger.addHandler(hdlr)
-
-    dolog("DEBUG", "test")
- 
-    #allow views to use the app in decorators
-    import rhaptos2.user.views
-
     return _app
 
+def make_app(config):
+    """Application factory"""
+    app = Flask(__name__)
+    app.config.update(config)
 
+    set_up_logging(app)
+
+    # Set the application
+    app = set_app(app)
+
+    # Initialize the views
+    from rhaptos2.user import views
+
+    return app
 
 def dolog(lvl, msg, caller=None, statsd=None):
     """wrapper function purely for adding context to log stmts
@@ -153,37 +132,34 @@ def dolog(lvl, msg, caller=None, statsd=None):
     except Exception, e:
         print extra, msg, e
 
-def set_logger(apptype, _confd):
+def set_up_logging(app):
+    """Set up the logging within the application.
+
+    useage::
+        logger.warn("Help",
+                    extra={'statsd': ['rhaptos2.repo.module',
+                                      'bamboo.foo.bar']})
+
     """
+    config = app.config
 
-    useage:
-        lg.warn("Help", extra={'statsd':['rhaptos2.repo.module',
-                                         'bamboo.foo.bar']})
+    # Define the logging handlers
+    statsd_host = config['globals']['bamboo_global']['statsd_host']
+    statsd_port = config['globals']['bamboo_global']['statsd_port']
+    statsd_handler = log.StatsdHandler(statsd_host, statsd_port)
+    stream_handler = logging.StreamHandler()
 
-    """
+    # Define the log formatting. Reduced this as bug #39 prevents
+    #   extra being used.
+    # formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s  "
+    #                               "- %(request_id)s - %(user_id)s "
+    #                               "- %(message)s")
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s  "
+                                  "- %(message)s")
 
+    statsd_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
 
-    ## define handlers
-    stats_hdlr = log.StatsdHandler(_confd['rhaptos2user_statsd_host'],
-                    int(_confd['rhaptos2user_statsd_port']))
-
-    stream_hdlr = logging.StreamHandler()
-
-    ## formatters - reduced this as bug #39 prevents extra being used. 
-#    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s  - %(request_id)s - %(user_id)s - %(message)s')
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s  - %(message)s')
-
-    stream_hdlr.setFormatter(formatter)
-    stats_hdlr.setFormatter(formatter)
-
-    return (stream_hdlr, stats_hdlr)
-
-
-
-
-
-
-
-
-
-
+    # Set the handlers on the application.
+    for handler in (statsd_handler, stream_handler,):
+        app.logger.addHandler(handler)
