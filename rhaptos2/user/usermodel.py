@@ -287,7 +287,6 @@ def get_user_by_identifier(unquoted_id):
 def get_user_by_name(namefrag):
     """ FOr search functionality"""
 
-    sanitise_usersql(namefrag)
     q = db_session.query(User)
     q = q.filter(User.fullname.ilike("%%%s%%" % namefrag))
     rs = q.all()
