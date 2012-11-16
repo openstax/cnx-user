@@ -285,18 +285,15 @@ def get_user_by_name(namefrag):
 
     sanitise_usersql(namefrag)
     q = db_session.query(User)
-    q = q.filter(User.fullname.like("%%%s%%" % namefrag))
+    q = q.filter(User.fullname.ilike("%%%s%%" % namefrag))
     rs = q.all()
-
     out_l = []
     for row in rs:
-        out_l.append(User(row.user_id))
-
+        out_l.append(row)
     return out_l
 
 def get_all_users():
     """ FOr search functionality"""
-
 
     q = db_session.query(User)
     rs = q.all()
