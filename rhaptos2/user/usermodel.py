@@ -284,14 +284,6 @@ def get_user_by_identifier(unquoted_id):
     return newu 
 
 
-def sanitise_usersql(sqlfrag):
-    """ More of a reminder than actual good practise"""
-    dodgy = [";","SELECT"]
-    for d in dodgy:
-        if d.upper() in sqlfrag:
-            raise Exception("Potential SQL Injhection - %s" % sqlfrag)
-    return sqlfrag
-
 def get_user_by_name(namefrag):
     """ FOr search functionality"""
 
