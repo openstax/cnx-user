@@ -85,15 +85,25 @@ class User(Base):
         ##.. todo:: check for failure to provide user_id
 
     def row_as_dict(self):
-        """Return the """
+        """Return self as a dict, suitable for jsonifying """
         d = {}
         for col in self.__table__.columns:
-            d[col.name] = self.__dict__[col.name]
+            ##We can have a field name and nothing set in self...
+            if col.name not in self.__dict__.keys():
+                d[col.name] = None
+            else:
+                d[col.name] = self.__dict__[col.name]
 
         d['identifiers'] = [] 
         for i in self.identifiers: 
             d['identifiers'].append(i.row_as_dict())
         return d
+
+    def jsonify(self):
+        """Helper function that returns simple json repr """
+        selfd = self.row_as_dict()
+        jsonstr = json.dumps(selfd)
+        return jsonstr
 
     def set_new_id(self):
         """If we are new user, be able to create uuid 
@@ -113,6 +123,8 @@ class User(Base):
         self.user_id =  "org.cnx.user-" + str(uid)
         return self.user_id
 
+    def __repr__(self):
+        return "%s-%s" % (self.fullname, self.user_id)
 
 class Identifier(Base):
     """The external-to-cnx, globally unique identifer string that 
