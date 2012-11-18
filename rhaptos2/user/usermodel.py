@@ -24,6 +24,60 @@ A user_id is a urn of form <domain_of_originating_repo>-<uuid(4)>
 "org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383"
 
 
+API
+
+:/user/:
+    Support POST PUT GET [DELETE]
+    Is keyed on *user_id* - the uuid form above
+    /user/org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383
+    will return a *user profile* in JSON form
+
+:/users/:
+    Support only GET
+
+:/users/:
+    GET - will return list of all users - is only for dev. and 
+          hardcoded to max 25
+
+:/users/?fullname=bob:
+    GET - searches the key field in User object and returns
+          JSON encoded user profiles
+
+
+A specialised form of the above search is
+
+/user/?openid=http://xxx
+/user/?persona=p@x.com
+
+These explicitly want to look up existing authetnitcatd identifiers in our dbase.
+(ie part of signon process)
+
+
+views
+-----
+
+:search_user():
+
+:post_user(<dict>):
+     user_id MUST NOT be present
+     Will overwrite all fields provided.
+
+:put_user(<dict>):
+     user_id MUST be present.
+     We will replace all fields provided 
+
+:get_user(<user_id>):
+     IF search string present, treat it as a search
+     else search_user
+
+:search_user(authenticatedID):
+     see above 
+
+:delete_user():
+      TBD
+
+
+Matching usermodel
 
 
 """
@@ -31,11 +85,13 @@ import json
 import uuid
 import pprint
 
-from sqlalchemy import Table, ForeignKey
-from sqlalchemy import Column, Integer, String, Text, Enum
-from sqlalchemy.orm import  relationship
+from sqlalchemy import (Table, ForeignKey, or_,
+                        Column, Integer, String,
+                        Text, Enum)
+from sqlalchemy.orm import relationship
 
-from rhaptos2.user.backend import Base, db_session      #shared session from backend module, for pooling
+#shared session from backend module, for pooling
+from rhaptos2.user.backend import Base, db_session      
 from rhaptos2.common.err import Rhaptos2Error
 
 
@@ -191,7 +247,7 @@ def put_user(security_token, json_str, user_id):
     #return result
     #handle errors
 
-    pass
+    raise NotImplementedError
 
 def populate_user(incomingd, userobj):
 
@@ -285,10 +341,19 @@ def get_user_by_identifier(unquoted_id):
 
 
 def get_user_by_name(namefrag):
-    """ FOr search functionality"""
+    """
+    Perform a case insensitive search on fullname
+
+    I would like to offer at least two other searches, 
+    specifying the fields to search, and a frag search across 
+    many fields.
+    """
 
     q = db_session.query(User)
-    q = q.filter(User.fullname.ilike("%%%s%%" % namefrag))
+    q = q.filter(or_(
+                     User.fullname.ilike("%%%s%%" % namefrag),
+                     User.email.ilike("%%%s%%" % namefrag),
+                     ))
     rs = q.all()
     out_l = []
     for row in rs:
