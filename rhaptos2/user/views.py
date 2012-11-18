@@ -146,8 +146,8 @@ def view_post_user():
     db_session.commit()
     return "Saved"
 
-@app.route('/users/', methods=["GET",])
-def view_post_user():
+
+def view_all_users():
     """ """
     ###
     
@@ -158,3 +158,43 @@ def view_post_user():
     resp.content_type='application/json'
     return resp
 
+@app.route('/users/', methods=["GET",])
+def search_user():
+    """
+    we support two modes::
+
+       GET /users/
+          (returns all users - devel only)     
+       GET /users/?search=<fragment>
+          (uses a general search)
+
+    search will search many fields (currently fullname and email)
+    A new search feature willl likely allow
+
+       GET /users/?fullname=<fragment>&email=<fragment2>
+          (uses keyvalues as filters)
+
+
+    """
+
+    qstr = request.query_string
+    if qstr.strip() == '':
+        #no query, return all
+        view_all_users()
+
+    elif "search" in request.args:
+        ###too much hardcoding
+        namefrag = request.args['search']
+         
+        try:
+            matchlist = usermodel.get_user_by_name(namefrag)     
+            dlist = [u.row_as_dict() for u in matchlist]
+        except err.Rhaptos2Error, e:
+            abort(404)
+
+        resp = flask.make_response(json.dumps(dlist))
+        resp.content_type='application/json'
+        return resp
+
+    else:
+        abort(400) #needs ?search=x syntax
