@@ -58,14 +58,12 @@ def get_user_by_identifier():
 
     unquoted_identifier = qstr.replace("user=", "")
     unquoted_identifier = urllib.unquote(unquoted_identifier)
-    dolog("INFO", "THis is request %s" % g.requestid)
+    dolog("INFO", "This is request %s" % g.requestid)
     dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
 
 
-    dolog("INFO", "THis is request %s" % g.requestid)
-    dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
-    print "A" + unquoted_identifier
-    print "B" + urllib.unquote(unquoted_identifier)
+    #print "A" + unquoted_identifier
+    #print "B" + urllib.unquote(unquoted_identifier)
 
 
     ### errors to abort function
