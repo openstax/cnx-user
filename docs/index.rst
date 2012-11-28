@@ -8,24 +8,22 @@ identifiers (OpenID, Mozilla Persona) and retrieve back the fuill
 details of a user within our system.
 
 
-
-
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :glob:
-  
-   *
+   
+   *  
 
 
+Draft Specification:
 
-.. automodule:: rhaptos2.user.views
-   :members: 
+   
+.. toctree::
+   :maxdepth: 1
 
-
-
-
+   spec/index
 
 
 Related Projects

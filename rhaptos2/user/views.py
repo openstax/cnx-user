@@ -52,41 +52,8 @@ def index():
 
 @app.route('/openid/', methods=["GET",])
 def get_user_by_identifier():
-    """ """
-    qstr = request.query_string
-    
-
-    unquoted_identifier = qstr.replace("user=", "")
-    unquoted_identifier = urllib.unquote(unquoted_identifier)
-    dolog("INFO", "THis is request %s" % g.requestid)
-    dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
-
-
-    dolog("INFO", "THis is request %s" % g.requestid)
-    dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
-    print "A" + unquoted_identifier
-    print "B" + urllib.unquote(unquoted_identifier)
-
-
-    ### errors to abort function
-    ### .. todo:: better trap than abort()
-
-    security_token = None
-    try:
-        json_str = usermodel.get_user_by_identifier(unquoted_identifier)     
-    except err.Rhaptos2Error, e:
-        abort(404)
-
-    resp = flask.make_response(json_str)
-    resp.content_type='application/json'
-    return resp
-
-    
-@app.route('/user/', methods=["GET",])
-def get_user():
-    """
-
-    example::
+    """ 
+example::
 
       /user?user=org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383
 
@@ -103,32 +70,35 @@ def get_user():
               Flask should handle the last differently.   
 
     originally this use <idenfitfier> to pluckjt eh id from a path.
-    However if I sent in an openid id, with / in it, even quoted, Falsk would
-    pre-unquote and try to route the url now with added slashes.
-
-    I switched to a quick fix - now passing in a quote_plus'd query string named user
-    """
-
-    qstr = request.query_string
     
-    #    unquoted_identifier = urllib.unquote(identifier)
+    """
+    qstr = request.query_string
     unquoted_identifier = qstr.replace("user=", "")
-
-    dolog("INFO", "THis is request %s" % g.requestid)
+    unquoted_identifier = urllib.unquote(unquoted_identifier)
     dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
-    print "A" + unquoted_identifier
-    print "B" + urllib.unquote(unquoted_identifier)
-    ### errors to abort function
-    ### .. todo:: better trap than abort()
 
-    security_token = None
     try:
-        json_str = usermodel.get_user(security_token, unquoted_identifier)     
+        userobj = usermodel.get_user_by_identifier(unquoted_identifier)     
+        dolog("INFO", "%s <- userobj from get by identifer" % str(userobj))
     except err.Rhaptos2Error, e:
         abort(404)
 
+    resp = flask.make_response(userobj.jsonify())
+    resp.content_type='application/json'
+    return resp
 
-    resp = flask.make_response(json_str)
+    
+@app.route('/user/<user_id>', methods=["GET",])
+def get_user(user_id):
+    """
+
+    """
+    try:
+        uobj = usermodel.get_user(user_id)  
+    except err.Rhaptos2Error, e:
+        abort(404)
+
+    resp = flask.make_response(uobj.jsonify())
     resp.content_type='application/json'
     return resp
 
@@ -139,12 +109,34 @@ def view_post_user():
     ###
     #session add etc here
     js = request.json
-    print "***" + repr(js) + str(type(js))
-    u = usermodel.post_user(None, js)
-    print "here"
+    ### .. todo:: parse incvoming user dict
+    dolog("INFO", "***" + repr(js) + str(type(js)))
+    u = usermodel.post_user(js)
     db_session.add(u)
     db_session.commit()
     return "Saved"
+
+
+@app.route('/user/<user_id>', methods=["PUT",])
+def view_put_user(user_id):
+    """ """
+    ###
+    #session add etc here
+    js = request.json
+    dolog("INFO", "***PUT:" + repr(js) + str(type(js)))
+    ### .. todo:: parse the posted / putted dict???
+    try:
+        u = usermodel.put_user(js, user_id)
+    except:
+        abort(401)#.. todo:: meaningful error messages to user please. Flash?
+
+    db_session.add(u)
+    db_session.commit()
+    ### .. todo::  do not put this functionality into a view
+    return "Saved"
+
+
+
 
 
 def view_all_users():
@@ -152,7 +144,7 @@ def view_all_users():
     ###
     
     rs = usermodel.get_all_users()
-    users = [u.row_as_dict() for u in rs]
+    users = [u.to_dict() for u in rs]
     json_str = json.dumps(users)
     resp = flask.make_response(json_str)
     resp.content_type='application/json'
@@ -180,7 +172,7 @@ def search_user():
     qstr = request.query_string
     if qstr.strip() == '':
         #no query, return all
-        view_all_users()
+        return view_all_users()
 
     elif "search" in request.args:
         ###too much hardcoding
@@ -188,7 +180,7 @@ def search_user():
          
         try:
             matchlist = usermodel.get_user_by_name(namefrag)     
-            dlist = [u.row_as_dict() for u in matchlist]
+            dlist = [u.to_dict() for u in matchlist]
         except err.Rhaptos2Error, e:
             abort(404)
 

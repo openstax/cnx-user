@@ -13,22 +13,12 @@ import os
 from rhaptos2.user import backend, usermodel
 from rhaptos2.user.backend import db_session
 from rhaptos2.common import conf
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-CONFD_PATH = os.path.join(HERE, "../../local.ini")
-confd = conf.get_config(CONFD_PATH)
-
 from rhaptos2.common.configuration import (
     find_configuration_file,
     Configuration,
     )
-config = Configuration.from_file(CONFD_PATH)
 
 
-backend.initdb(config)
-
-print "Running simple prepopulation of database as connected by:"
-print config['pghost']
 
 def mkuser(fullname, openidstr):
     u = usermodel.User()
@@ -41,6 +31,21 @@ def mkuser(fullname, openidstr):
 
     db_session.add(u)
     db_session.commit()
+
+def run(config={}, *args, **kwds):
+    """ """
+
+    HERE = os.path.abspath(os.path.dirname(__file__))
+    CONFD_PATH = os.path.join(HERE, "../../local.ini")
+    confd = conf.get_config(CONFD_PATH)
+    config = Configuration.from_file(CONFD_PATH)
+
+
+backend.initdb(config)
+
+print "Running simple prepopulation of database as connected by:"
+print config['pghost']
+
 
 #mkuser('Rhaptos2 Test User', 'http://rhaptos2user.myopenid.com/')
 mkuser('foobar User', 'http://fake1.example.com/')
