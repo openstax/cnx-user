@@ -104,21 +104,19 @@ def get_user(user_id):
 
 
 @app.route('/user/', methods=["POST",])
-def view_post_user():
+def vw_post_user():
     """ """
-    ###
-    #session add etc here
+
+
     js = request.json
     ### .. todo:: parse incvoming user dict
     dolog("INFO", "***" + repr(js) + str(type(js)))
     u = usermodel.post_user(js)
-    db_session.add(u)
-    db_session.commit()
     return "Saved"
 
 
 @app.route('/user/<user_id>', methods=["PUT",])
-def view_put_user(user_id):
+def vw_put_user(user_id):
     """ """
     ###
     #session add etc here
@@ -129,15 +127,7 @@ def view_put_user(user_id):
         u = usermodel.put_user(js, user_id)
     except:
         abort(401)#.. todo:: meaningful error messages to user please. Flash?
-
-    db_session.add(u)
-    db_session.commit()
-    ### .. todo::  do not put this functionality into a view
     return "Saved"
-
-
-
-
 
 def view_all_users():
     """ """

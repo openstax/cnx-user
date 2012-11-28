@@ -199,6 +199,8 @@ from sqlalchemy import (Table, ForeignKey, or_,
 from sqlalchemy.orm import relationship
 import sqlalchemy.types
 import datetime
+
+
 from cnxbase import CNXBase
 
 #shared session from backend module, for pooling
@@ -207,18 +209,42 @@ from rhaptos2.user.backend import Base, db_session
 from rhaptos2.user import dolog
 from rhaptos2.common.err import Rhaptos2Error
 
+
 ############## JSON SUpport 
 ## COde that supports converting to json resides in object.
 ## code that supports converting form json to object seems to sit best externally
 ##in both cases shared code resuse seems likely ewe shall move this elsewhere.
 
-## experiment with multiple inheritence?
 
+################## 
 
+class Identifier(Base, CNXBase):
+    """The external-to-cnx, globally unique identifer string that 
+       is the 'username' a person claims to be, and needs verification
+       from a thrid party to us, the relying party.
 
-################## User test
+    A leaf node as it were (no children in ER diagram)
 
+    The multiple inheritence from CNXBase gives us a range of to and from JSON methods
+    These are mostly overridden in User below. Cut and Paste occurs but is iminimised with  inheritence.
+
+    """
+    __tablename__   = "cnxidentifier"
+
+    identifierstring = Column(String, primary_key=True)
+    identifiertype   = Column(String)  # (Enum, "persona", "openid")
+    user_id          = Column(String, ForeignKey("cnxuser.user_id"))
     
+    
+    def __init__(self, identifierstring=None, identifiertype=None):
+        """ """
+        self.identifierstring = identifierstring
+        self.identifiertype = identifiertype
+
+
+
+###########
+   
 
 class User(Base, CNXBase):
     """declarative class for user_details
@@ -365,30 +391,6 @@ class User(Base, CNXBase):
     def __repr__(self):
         return "%s-%s" % (self.fullname, self.user_id)
 
-class Identifier(Base, CNXBase):
-    """The external-to-cnx, globally unique identifer string that 
-       is the 'username' a person claims to be, and needs verification
-       from a thrid party to us, the relying party.
-
-    A leaf node as it were (no children in ER diagram)
-
-    """
-    __tablename__   = "cnxidentifier"
-
-    identifierstring = Column(String, primary_key=True)
-    identifiertype   = Column(String)  # (Enum, "persona", "openid")
-    user_id          = Column(String, ForeignKey("cnxuser.user_id"))
-    
-    
-    def __init__(self, identifierstring=None, identifiertype=None):
-        """ """
-        self.identifierstring = identifierstring
-        self.identifiertype = identifiertype
-
-
-
-###########
-
 
 def parse_json_user_schema(jsonstr):
     """Ul;timately we should have multiple version handling. """
@@ -418,27 +420,24 @@ def put_user(jsond, user_id):
     """Given a user_id, and a json_str representing the "Updated" fields
        then update those fields for that user_id """
 
-    #get User()
-    #parse JSON
-    #update
-    #session add commit
-    #return result
-    #handle errors
     try:
         uobj =get_user(user_id)
     except Exception, e:
         dolog("INFO", str(e))
         raise Rhaptos2Error("FAiled to get user")
 
-    #parser = verify_schema_version(None)
+    #.. todo:: parser = verify_schema_version(None)
     updated_obj = populate_user(jsond, uobj)        
+    db_session.add(updated_obj); db_session.commit()
     return updated_obj
 
 
 def populate_user(incomingd, userobj):
+    """Given a dict, and a User object, push dict into User object and return it.
 
-    """not quite clear the benefits of this one apart form testing
-       feel need to work with parser mpore"""
+    .. todo:: validate and parse dict.
+
+    """
 
     ### put every key in json into User(), manually handling
     ### Identifier
@@ -456,21 +455,14 @@ def populate_user(incomingd, userobj):
     return userobj
     
 
-def post_user(json_dict):
-    """Given a user_id, and a json_str representing the complete set
-       of fields then update those fields for that user_id
+def post_user(jsond):
+    """Given a dict representing the complete set
+       of fields then create a new user and those fields
 
     I am getting a dictionary direct form Flask request object - want
     to handle that myself with parser.
 
     returns User object, for later saveing to DB"""
-
-    #get User()
-    #parse JSON
-    #create new user
-    #session add commit
-    #return result
-    #handle errors
 
     u = User()
 
@@ -478,7 +470,7 @@ def post_user(json_dict):
     #incomingd = parser(json_str)
     incomingd = json_dict
     u = populate_user(incomingd, u)
-
+    db_session.add(u); db_session.commit()
     return u
 
         

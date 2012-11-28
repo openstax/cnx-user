@@ -24,6 +24,11 @@ Installation:
    postgresdbase now. (Yea security !)
 
 
+4.a within the venv so:
+    
+    python runtests.py --config=../../../local.ini --prepopulate=Y
+
+
 5. You should be able to successfully 
 
    http://localhost:5000 - hello world
