@@ -174,8 +174,18 @@ def search_user():
         except err.Rhaptos2Error, e:
             abort(404)
 
-        resp = flask.make_response(json.dumps(dlist))
-        resp.content_type='application/json'
+        data = json.dumps(dlist)
+        callback = request.args.get('callback', None)
+        if callback is None:
+            # Send as JSON
+            content_type = 'application/json'
+        else:
+            # Send as JSONP with callback defined by request.
+            data = '{0}({1})'.format(callback, data)
+            content_type = 'application/javascript'
+
+        resp = flask.make_response(data)
+        resp.content_type = content_type
         return resp
 
     else:
