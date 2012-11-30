@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #! -*- coding: utf-8 -*-
 
-###  
+###
 # Copyright (c) Rice University 2012
 # This software is subject to
 # the provisions of the GNU Lesser General
@@ -52,7 +52,7 @@ def index():
 
 @app.route('/openid/', methods=["GET",])
 def get_user_by_identifier():
-    """ 
+    """
 example::
 
       /user?user=org.cnx.user.f9647df6-cc6e-4885-9b53-254aa55a3383
@@ -60,17 +60,17 @@ example::
     .. todo:: Flask will unquote the whole URL and try to route that,
               instead of taking the route that exists in quoted format,
                and then calculating the <parameter>
-             
+
               /openid/this/is/a/path
- 
+
               /openid/http://this/is/openid/url
-    
+
               /openid/'http%3A%2F%2Fthis%2Fis%2Fopenid%2Furl'
-           
-              Flask should handle the last differently.   
+
+              Flask should handle the last differently.
 
     originally this use <idenfitfier> to pluckjt eh id from a path.
-    
+
     """
     qstr = request.query_string
     unquoted_identifier = qstr.replace("user=", "")
@@ -78,7 +78,7 @@ example::
     dolog("INFO", "I saw identifier: %s" % unquoted_identifier)
 
     try:
-        userobj = usermodel.get_user_by_identifier(unquoted_identifier)     
+        userobj = usermodel.get_user_by_identifier(unquoted_identifier)
         dolog("INFO", "%s <- userobj from get by identifer" % str(userobj))
     except err.Rhaptos2Error, e:
         abort(404)
@@ -87,14 +87,14 @@ example::
     resp.content_type='application/json'
     return resp
 
-    
+
 @app.route('/user/<user_id>', methods=["GET",])
 def get_user(user_id):
     """
 
     """
     try:
-        uobj = usermodel.get_user(user_id)  
+        uobj = usermodel.get_user(user_id)
     except err.Rhaptos2Error, e:
         abort(404)
 
@@ -132,7 +132,7 @@ def vw_put_user(user_id):
 def view_all_users():
     """ """
     ###
-    
+
     rs = usermodel.get_all_users()
     users = [u.to_dict() for u in rs]
     json_str = json.dumps(users)
@@ -146,7 +146,7 @@ def search_user():
     we support two modes::
 
        GET /users/
-          (returns all users - devel only)     
+          (returns all users - devel only)
        GET /users/?search=<fragment>
           (uses a general search)
 
@@ -167,9 +167,9 @@ def search_user():
     elif "search" in request.args:
         ###too much hardcoding
         namefrag = request.args['search']
-         
+
         try:
-            matchlist = usermodel.get_user_by_name(namefrag)     
+            matchlist = usermodel.get_user_by_name(namefrag)
             dlist = [u.to_dict() for u in matchlist]
         except err.Rhaptos2Error, e:
             abort(404)
