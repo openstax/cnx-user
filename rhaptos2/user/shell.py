@@ -9,6 +9,7 @@
 # See LICENCE.txt for details.
 ###
 
+
 import os
 from rhaptos2.user import backend, usermodel
 from rhaptos2.user.backend import db_session
