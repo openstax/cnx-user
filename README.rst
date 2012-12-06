@@ -2,6 +2,8 @@
 rhaptos2.user
 =============
 
+Docs can be found at : http://connexions.github.com/rhaptos2.user/
+
 Installation:
 
 1. create a clean venv and populate from requirements.txt
@@ -22,6 +24,11 @@ Installation:
 
 4. adjust local.ini as needed, the defaults give you access to a
    postgresdbase now. (Yea security !)
+
+
+4.a within the venv so:
+    
+    python runtests.py --config=../../../local.ini --prepopulate=Y
 
 
 5. You should be able to successfully 
