@@ -8,9 +8,6 @@ all relevant known details about a Connexions user.
 It is supplied to any component of the system which needs
 user details, and is served over a RESTful API over HTTP.
 
- 
-
-
 
 
 ::

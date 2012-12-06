@@ -1,6 +1,6 @@
-====================
-Simple specification
-====================
+===================
+Draft specification
+===================
 
 
 User ID
