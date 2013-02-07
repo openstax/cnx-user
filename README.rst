@@ -1,6 +1,16 @@
+
+.. Copyright (c) Rice University 2012
+.. This software is subject to
+.. the provisions of the GNU Lesser General
+.. Public License Version 2.1 (LGPL).
+.. See LICENCE.txt for details.
+
+
 =============
 rhaptos2.user
 =============
+
+Docs can be found at : http://connexions.github.com/rhaptos2.user/
 
 Installation:
 
@@ -22,6 +32,11 @@ Installation:
 
 4. adjust local.ini as needed, the defaults give you access to a
    postgresdbase now. (Yea security !)
+
+
+4.a within the venv so:
+    
+    python runtests.py --config=../../../local.ini --prepopulate=Y
 
 
 5. You should be able to successfully 

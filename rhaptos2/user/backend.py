@@ -68,7 +68,7 @@ Base = declarative_base()
 
 def connect_now(confd):
     connstr = "postgresql+psycopg2://%(pgusername)s:%(pgpassword)s@%(pghost)s/%(pgdbname)s" % confd
-    engine = create_engine(connstr)
+    engine = create_engine(connstr, echo=True) #echo=True
     return engine
 
 

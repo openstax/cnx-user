@@ -1,3 +1,11 @@
+
+.. Copyright (c) Rice University 2012
+.. This software is subject to
+.. the provisions of the GNU Lesser General
+.. Public License Version 2.1 (LGPL).
+.. See LICENCE.txt for details.
+
+
 ============
 User details
 ============
@@ -7,9 +15,6 @@ all relevant known details about a Connexions user.
 
 It is supplied to any component of the system which needs
 user details, and is served over a RESTful API over HTTP.
-
- 
-
 
 
 
