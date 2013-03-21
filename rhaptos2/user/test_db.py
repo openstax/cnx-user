@@ -87,12 +87,20 @@ def mkuser(openidstr, fullname, force_id):
 
 
 def populate_dbase():
-    """ """
-    mkuser("https://paulbrian.myopenid.com", "Paul Brian", "org.cnx.user-75e06194-baee-4395-8e1a-566b656f6920")
-    mkuser("https://rossreedstrom.myopenid.com", "Ross Reedstrom", "1")
-    mkuser("https://edwoodward.myopenid.com", "Ed Woodward", "2")
-    mkuser("https://philschatz.myopenid.com", "Phil Schatz", "3")
-    mkuser("https://michaelmulich.myopenid.com", "Michael Mulich", "4")
+    """ NB - these are copy of decl.py in repo.
+    Co-ordinate carefully"""
+
+    mkuser("https://paulbrian.myopenid.com", "Paul Brian",
+           "cnxuser:75e06194-baee-4395-8e1a-566b656f6920")
+    mkuser("https://rossreedstrom.myopenid.com", "Ross Reedstrom",
+           "cnxuser:75e06194-baee-4395-8e1a-566b656f6921")
+    mkuser("https://edwoodward.myopenid.com", "Ed Woodward",
+           "cnxuser:75e06194-baee-4395-8e1a-566b656f6922")
+    mkuser("https://philschatz.myopenid.com", "Phil Schatz",
+           "cnxuser:75e06194-baee-4395-8e1a-566b656f6923")
+    mkuser("https://michaelmulich.myopenid.com", "Michael Mulich",
+           "cnxuser:75e06194-baee-4395-8e1a-566b656f6924")
+
 
 
    
