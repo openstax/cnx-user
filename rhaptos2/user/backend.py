@@ -14,13 +14,13 @@
 
 Calling structure
 
-This may seem complex (it is) but it si at least clear and avoids the usual 
+This may seem complex (it is) but it is at least clear and avoids the usual 
 complicated waving of SQLAlchmey
 
 1. THe models exist in usermodel.
 2. The session mgmt is in backend (maybe rename)
 3. The two together should be setup in db_controller (A nod to MVC)
-   import the sesison, ise ti to save models.
+   import the session, use it to save models.
 
 
 
@@ -37,7 +37,7 @@ Ship.__table__.constraints, Ship.__table__.indexes are other properties you migh
 #2. setup tests
 #3. get a jsonifiable solution to support 1:m and M;N relations
 #4. work this as standa lone with tests so it can bio-directionally deal with User JSON and later modul#e JSON
-#   and do so standalo=ne in tests
+#   and do so standalone in tests
 #http://docs.sqlalchemy.org/en/rel_0_7/orm/relationships.html
 
 
