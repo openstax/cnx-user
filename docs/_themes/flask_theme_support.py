@@ -1,4 +1,15 @@
-# flasky extensions.  flasky pygments style based on tango style
+#!/usr/bin/env python
+#! -*- coding: utf-8 -*-
+
+###
+# Copyright (c) Rice University 2012-13
+# This software is subject to
+# the provisions of the GNU Affero General
+# Public License version 3 (AGPLv3).
+# See LICENCE.txt for details.
+###
+
+
 from pygments.style import Style
 from pygments.token import Keyword, Name, Comment, String, Error, \
      Number, Operator, Generic, Whitespace, Punctuation, Other, Literal
@@ -84,3 +95,4 @@ class FlaskyStyle(Style):
         Generic.Subheading:        "bold #800080",   # class: 'gu'
         Generic.Traceback:         "bold #a40000",   # class: 'gt'
     }
+

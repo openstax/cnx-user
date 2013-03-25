@@ -1,11 +1,15 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+#! -*- coding: utf-8 -*-
+
 ###
-# Copyright (c) Rice University 2012
+# Copyright (c) Rice University 2012-13
 # This software is subject to
-# the provisions of the GNU Lesser General
-# Public License Version 2.1 (LGPL).
+# the provisions of the GNU Affero General
+# Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 ###
+
+
 """Rhaptos user profile web application
 
 The application is initialized using the application factory (`make_app`).
@@ -165,3 +169,4 @@ def set_up_logging(app):
     # Set the handlers on the application.
     for handler in (statsd_handler, stream_handler,):
         app.logger.addHandler(handler)
+

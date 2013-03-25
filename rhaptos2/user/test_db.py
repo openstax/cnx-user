@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 #! -*- coding: utf-8 -*-
 
-###  
-# Copyright (c) Rice University 2012
+###
+# Copyright (c) Rice University 2012-13
 # This software is subject to
-# the provisions of the GNU Lesser General
-# Public License Version 2.1 (LGPL).
+# the provisions of the GNU Affero General
+# Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 ###
+
 
 """
 Simple testing of API - using HTTP.
@@ -154,6 +155,7 @@ def test_putuser():
     db_session.add(u); db_session.commit()    
     u_fromdb = usermodel.get_user("org.cnx.user-75e06194-baee-4395-8e1a-566b656f6920")
     assert u_fromdb.fullname == "wibblename"    
+
 
 
 

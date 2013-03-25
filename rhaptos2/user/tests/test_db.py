@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 #! -*- coding: utf-8 -*-
 
-###  
-# Copyright (c) Rice University 2012
+###
+# Copyright (c) Rice University 2012-13
 # This software is subject to
-# the provisions of the GNU Lesser General
-# Public License Version 2.1 (LGPL).
+# the provisions of the GNU Affero General
+# Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 ###
+
 
 """
 Simple testing of API - using HTTP.
@@ -105,5 +106,6 @@ def test_putuser():
 
 if __name__ == "__main__":
     setup()
+
 
 
