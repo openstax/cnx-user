@@ -102,6 +102,9 @@ def get_user(user_id):
     resp.content_type='application/json'
     return resp
 
+@app.route('/register/', methods=["POST","GET"])
+def vw_registration():
+    return "TBC: A registration app here"
 
 @app.route('/user/', methods=["POST",])
 def vw_post_user():
