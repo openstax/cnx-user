@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 install_requires = (
     'pyramid',
     'requests',
+    'transaction',
     'SQLAlchemy',
     'psycopg2',
     'waitress',
@@ -23,5 +24,7 @@ setup(
     entry_points="""\
     [paste.app_factory]
     main = cnxauth:main
+    [console_scripts]
+    initialize_cnx-auth_db = cnxauth.scripts.initializedb:main
     """,
     )

@@ -1,17 +1,12 @@
-#!/usr/bin/env python
-#! -*- coding: utf-8 -*-
-
-###
-# Copyright (c) Rice University 2012-13
-# This software is subject to
-# the provisions of the GNU Affero General
+# -*- coding: utf-8 -*-
+# ###
+# Copyright (c) 2013, Rice University
+# This software is subject to the provisions of the GNU Affero General
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
-###
-
-
+# ###
 """
-THis exists solely to provide less typing for a "leaf node" 
+THis exists solely to provide less typing for a "leaf node"
 in a simple realtional schema (1:M and 1:M-N:1) when used with SQLAlchemy
 
 SA does not support class based inheritence in the normal Python way for objects inheriting from Base.  Thus we have those objects perform multiple inheritence...
@@ -30,7 +25,7 @@ class CNXBase():
 
         """
         d = userprofile_dict
-        for k in d: 
+        for k in d:
             setattr(self, k, d[k])
 
     def to_dict(self):
@@ -56,7 +51,5 @@ class CNXBase():
         if isinstance(type(col.type), sqlalchemy.types.DateTime):
             outstr = getattr(self, col.name).isoformat()
         else:
-            outstr = getattr(self, col.name)             
+            outstr = getattr(self, col.name)
         return outstr
-
-
