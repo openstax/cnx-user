@@ -22,7 +22,7 @@ def get_user_by_identifier(request):
     ident = request.matchdict['id']
     try:
         user = usermodel.get_user_by_identifier(ident)
-    except err.Rhaptos2Error, e:
+    except usermodel.Rhaptos2Error, e:
         raise NotFound()
     return {'id': user.id, 'identifier': user.identifier, 'type': user.type}
 
@@ -32,7 +32,7 @@ def get_user(request):
     id = request.multidict['id']
     try:
         user = usermodel.get_user(id)
-    except err.Rhaptos2Error, e:
+    except usermodel.Rhaptos2Error, e:
         raise NotFound()
     return {'id': user.id, 'fullname': user.fullname, 'email': user.email}
 
@@ -55,6 +55,6 @@ def query(request):
     q = request.query_string.get('q', '')
     try:
         matchlist = usermodel.get_user_by_name(q)
-    except err.Rhaptos2Error, e:
+    except usermodel.Rhaptos2Error, e:
         raise HTTPInternalServerError()
     return [u.id for u in matchlist]
