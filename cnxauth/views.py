@@ -1,56 +1,26 @@
-#!/usr/bin/env python
-#! -*- coding: utf-8 -*-
-
-###
-# Copyright (c) Rice University 2012-13
-# This software is subject to
-# the provisions of the GNU Affero General
+# -*- coding: utf-8 -*-
+# ###
+# Copyright (c) 2013, Rice University
+# This software is subject to the provisions of the GNU Affero General
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
-###
-
-
-from flask import Flask, render_template, request, g, session, flash,   redirect, url_for, abort
-
-
+# ###
 import datetime
 import md5, random
 import os, sys
-import flask
-import statsd
 import json
 from functools import wraps
 import uuid
 import requests
 import urllib
 
-from rhaptos2.common import log
-from rhaptos2.common import err
-from rhaptos2.common import conf
-
-from rhaptos2.user import get_app, dolog, usermodel
-from rhaptos2.user.backend import db_session
-
-app = get_app()
-
-
-@app.before_request
-def requestid():
-    g.requestid = uuid.uuid4()
-    g.request_id = g.requestid
-
-@app.teardown_request
-def shutdown_session(exception=None):
-    db_session.remove()
-
-
-@app.route('/')
+#@app.route('/')
 def index():
     dolog("INFO", "THis is request %s" % g.requestid)
     return "This is the USer Database for CNX"
 
 
-@app.route('/openid/', methods=["GET",])
+#@app.route('/openid/', methods=["GET",])
 def get_user_by_identifier():
     """
 example::
@@ -88,7 +58,7 @@ example::
     return resp
 
 
-@app.route('/user/<user_id>', methods=["GET",])
+#@app.route('/user/<user_id>', methods=["GET",])
 def get_user(user_id):
     """
 
@@ -102,11 +72,11 @@ def get_user(user_id):
     resp.content_type='application/json'
     return resp
 
-@app.route('/register/', methods=["POST","GET"])
+#@app.route('/register/', methods=["POST","GET"])
 def vw_registration():
     return "TBC: A registration app here"
 
-@app.route('/user/', methods=["POST",])
+#@app.route('/user/', methods=["POST",])
 def vw_post_user():
     """ """
 
@@ -118,7 +88,7 @@ def vw_post_user():
     return "Saved"
 
 
-@app.route('/user/<user_id>', methods=["PUT",])
+#@app.route('/user/<user_id>', methods=["PUT",])
 def vw_put_user(user_id):
     """ """
     ###
@@ -143,7 +113,7 @@ def view_all_users():
     resp.content_type='application/json'
     return resp
 
-@app.route('/users/', methods=["GET",])
+#@app.route('/users/', methods=["GET",])
 def search_user():
     """
     we support two modes::
@@ -193,4 +163,3 @@ def search_user():
 
     else:
         abort(400) #needs ?search=x syntax
-

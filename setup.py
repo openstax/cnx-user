@@ -3,9 +3,11 @@ from setuptools import setup, find_packages
 
 
 install_requires = (
-    "requests",
-    "SQLAlchemy",
-    "psycopg2",
+    'pyramid',
+    'requests',
+    'SQLAlchemy',
+    'psycopg2',
+    'waitress',
     )
 
 setup(
@@ -13,9 +15,13 @@ setup(
     version='0.1',
     author='Connexions team',
     author_email='info@cnx.org',
-    url='https://github.com/pumazi/cnx-auth',
+    url="https://github.com/pumazi/cnx-auth",
     license='LICENSE.txt',
-    description='Authentication services for the Connexions components',
+    description="Authentication services for the Connexions components",
     packages=find_packages(),
     install_requires=install_requires,
+    entry_points="""\
+    [paste.app_factory]
+    main = cnxauth:main
+    """,
     )

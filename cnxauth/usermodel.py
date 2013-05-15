@@ -1,20 +1,15 @@
-#!/usr/bin/env python
-#! -*- coding: utf-8 -*-
-
-###
-# Copyright (c) Rice University 2012-13
-# This software is subject to
-# the provisions of the GNU Affero General
+# -*- coding: utf-8 -*-
+# ###
+# Copyright (c) 2013, Rice University
+# This software is subject to the provisions of the GNU Affero General
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
-###
-
-
+# ###
 """
 Json in and out
 ---------------
 
-JSON out is a realtively do-able approach - we shall define a method "todict" 
+JSON out is a realtively do-able approach - we shall define a method "todict"
 on each SA object, and this shall be manually adjusted so that when it is called
 it itself calls the same method on "children" objects.  THe presumed existence of children objects is fine for our current use cases.
 
@@ -28,7 +23,7 @@ Discussion on serialising rows
 ------------------------------
 
 It used to be easy to serialise a database row.  Really.
-But here we are really serialsing nested objects - and the dangers that allows 
+But here we are really serialsing nested objects - and the dangers that allows
 and the edge cases are aquite high.  I cannot find a simple clean and supported method to
 arbitraily serialise SQ objects to dict (and on to JSON)
 
@@ -95,7 +90,7 @@ API
     Support only GET
 
 :/users/:
-    GET - will return list of all users - is only for dev. and 
+    GET - will return list of all users - is only for dev. and
           hardcoded to max 25
 
 :/users/?fullname=bob:
@@ -123,14 +118,14 @@ views
 
 :put_user(<dict>):
      user_id MUST be present.
-     We will replace all fields provided 
+     We will replace all fields provided
 
 :get_user(<user_id>):
      IF search string present, treat it as a search
      else search_user
 
 :search_user(authenticatedID):
-     see above 
+     see above
 
 :delete_user():
       TBD
@@ -166,7 +161,7 @@ testjson = '{"interests": null, "identifiers": [{"identifierstring": "http://fak
 >>> u.identifiers=[i,]
 >>> db_session.add(u)
 >>> db_session.commit()
->>> 
+>>>
 
 
 
@@ -205,21 +200,25 @@ from cnxbase import CNXBase
 
 #shared session from backend module, for pooling
 
-from rhaptos2.user.backend import Base, db_session      
-from rhaptos2.user import dolog
-from rhaptos2.common.err import Rhaptos2Error
+from .backend import Base, DBSession as db_session
+
+def dolog(*args, **kwargs):
+    pass
+
+class Rhaptos2Error(Exception):
+    """ Custom exception """
 
 
-############## JSON SUpport 
+############## JSON SUpport
 ## COde that supports converting to json resides in object.
 ## code that supports converting form json to object seems to sit best externally
 ##in both cases shared code resuse seems likely ewe shall move this elsewhere.
 
 
-################## 
+##################
 
 class Identifier(Base, CNXBase):
-    """The external-to-cnx, globally unique identifer string that 
+    """The external-to-cnx, globally unique identifer string that
        is the 'username' a person claims to be, and needs verification
        from a thrid party to us, the relying party.
 
@@ -234,8 +233,8 @@ class Identifier(Base, CNXBase):
     identifierstring = Column(String, primary_key=True)
     identifiertype   = Column(String)  # (Enum, "persona", "openid")
     user_id          = Column(String, ForeignKey("cnxuser.user_id"))
-    
-    
+
+
     def __init__(self, identifierstring=None, identifiertype=None):
         """ """
         self.identifierstring = identifierstring
@@ -244,20 +243,20 @@ class Identifier(Base, CNXBase):
 
 
 ###########
-   
+
 
 class User(Base, CNXBase):
     """declarative class for user_details
 
     1. setattr and getattr are the "frontdoors" for SA - __dict__
-    manipluatins are ignored 
+    manipluatins are ignored
 
     2. This gives us a good in for pushing JSON to the db
 
 
     """
-    __tablename__ = "cnxuser" 
-    
+    __tablename__ = "cnxuser"
+
     user_id                      = Column(String, primary_key=True)
     title                        = Column(String)
     firstname                    = Column(String)
@@ -277,7 +276,7 @@ class User(Base, CNXBase):
     homepage                     = Column(String)
     email                        = Column(String)
     version                      = Column(String)
-         
+
     identifiers  = relationship("Identifier", backref="cnxuser")
 
     def __init__(self, user_id=None, **kwds):
@@ -290,11 +289,11 @@ class User(Base, CNXBase):
         NB - setattr and getattr are the "front door" for SqlAlchemy onject manipulation.
 
         """
-        
-        if user_id is None: 
+
+        if user_id is None:
             self.set_new_id()
-        else: 
-            self.user_id = user_id 
+        else:
+            self.user_id = user_id
 
         for k in kwds:
             setattr(self, k, kwds[k])
@@ -311,7 +310,7 @@ class User(Base, CNXBase):
         Accepts: userprofile as defined in XXX
 
         """
-        d = userprofile_dict 
+        d = userprofile_dict
 
         ##userid test... also mapping of names  tests...
 
@@ -338,7 +337,7 @@ class User(Base, CNXBase):
         if isinstance(type(col.type), sqlalchemy.types.DateTime):
             outstr = getattr(self, col.name).isoformat()
         else:
-            outstr = getattr(self, col.name)             
+            outstr = getattr(self, col.name)
         return outstr
 
     def to_dict(self):
@@ -346,7 +345,7 @@ class User(Base, CNXBase):
 
         d = {}
         for col in self.__table__.columns:
-            d[col.name] = self.safe_type_out(col)#getattr(self, col.name) 
+            d[col.name] = self.safe_type_out(col)#getattr(self, col.name)
 
             # >>> type(col.type)
             # <class 'sqlalchemy.types.String'>
@@ -358,8 +357,8 @@ class User(Base, CNXBase):
 
 
         ### Manually for each "child" relationship, adjust the dict to be returned
-        d['identifiers'] = [] 
-        for i in self.identifiers: 
+        d['identifiers'] = []
+        for i in self.identifiers:
             d['identifiers'].append(i.to_dict())
         return d
 
@@ -371,15 +370,15 @@ class User(Base, CNXBase):
         return jsonstr
 
     def set_new_id(self):
-        """If we are new user, be able to create uuid 
-       
+        """If we are new user, be able to create uuid
+
         ### .. todo: A new User() autosets uuid. Is this correct
         ### behaviour?
 
         >>> u = User()
         >>> x = u.set_new_id() # +doctest.ELLIPSIS
         >>> assert x == u.user_id
-          
+
 
         """
         if self.user_id is not None: return self.user_id
@@ -397,7 +396,7 @@ def parse_json_user_schema(jsonstr):
     return json.loads(jsonstr)
 
 def verify_schema_version(versionstr):
-    """This is a placeholder only.  
+    """This is a placeholder only.
     .. todo:: Handle versions sensibly
     """
     return parse_json_user_schema
@@ -427,7 +426,7 @@ def put_user(jsond, user_id):
         raise Rhaptos2Error("FAiled to get user")
 
     #.. todo:: parser = verify_schema_version(None)
-    updated_obj = populate_user(jsond, uobj)        
+    updated_obj = populate_user(jsond, uobj)
     db_session.add(updated_obj); db_session.commit()
     return updated_obj
 
@@ -442,7 +441,7 @@ def populate_user(incomingd, userobj):
     ### put every key in json into User(), manually handling
     ### Identifier
     for k in incomingd:
-        if k in ('user_id'): continue #.. todo:: test for user_id in a POST 
+        if k in ('user_id'): continue #.. todo:: test for user_id in a POST
         if k not in (u'identifier', u'identifiers'): ## a poor manual approach...
             setattr(userobj, k, incomingd[k])
         else:
@@ -453,7 +452,7 @@ def populate_user(incomingd, userobj):
             userobj.identifiers = outl
 
     return userobj
-    
+
 
 def post_user(jsond):
     """Given a dict representing the complete set
@@ -473,10 +472,10 @@ def post_user(jsond):
     db_session.add(u); db_session.commit()
     return u
 
-        
+
 def get_user(user_id):
     """
-    returns a User object, when provided with user_id 
+    returns a User object, when provided with user_id
     """
 
     ### Now lets recreate it.
@@ -489,7 +488,7 @@ def get_user(user_id):
     ### There is a uniq constraint on the table, but anyway...
     if len(rs) > 1:
         raise Rhaptos2Error("Too many matches")
-    
+
     newu = rs[0]
     return newu
 
@@ -511,15 +510,15 @@ def get_user_by_identifier(unquoted_id):
     #.. todo:: stop using indexes on rows - transform to fieldnames
     user_id = rs[0].user_id
     newu = get_user(user_id)
-    return newu 
+    return newu
 
 
 def get_user_by_name(namefrag):
     """
     Perform a case insensitive search on fullname
 
-    I would like to offer at least two other searches, 
-    specifying the fields to search, and a frag search across 
+    I would like to offer at least two other searches,
+    specifying the fields to search, and a frag search across
     many fields.
     """
 
@@ -545,7 +544,7 @@ def get_all_users():
         out_l.append(row)
         c += 1
         if c >= 25: break
-    # ..todo:: the worst limiting case ever... 
+    # ..todo:: the worst limiting case ever...
     return out_l
 
 
@@ -562,4 +561,3 @@ def close_session():
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-
