@@ -9,7 +9,7 @@
 from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
 
-from .backend import (
+from .models import (
     DBSession,
     Base,
     )

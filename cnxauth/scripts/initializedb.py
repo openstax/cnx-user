@@ -11,7 +11,7 @@ from pyramid.paster import (
     setup_logging,
     )
 
-from ..backend import (
+from ..models import (
     DBSession,
     Base,
     )

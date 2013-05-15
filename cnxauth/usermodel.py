@@ -200,7 +200,7 @@ from cnxbase import CNXBase
 
 #shared session from backend module, for pooling
 
-from .backend import Base, DBSession as db_session
+from .models import Base, DBSession as db_session
 
 def dolog(*args, **kwargs):
     pass
