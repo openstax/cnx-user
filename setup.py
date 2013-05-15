@@ -5,10 +5,12 @@ from setuptools import setup, find_packages
 install_requires = (
     'pyramid',
     'requests',
+    'waitress',
+    # SQL integration packages
     'transaction',
     'SQLAlchemy',
+    'zope.sqlalchemy',
     'psycopg2',
-    'waitress',
     )
 
 setup(

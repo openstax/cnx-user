@@ -15,9 +15,10 @@ from sqlalchemy.orm import (
     sessionmaker, scoped_session,
     relationship,
     )
+from zope.sqlalchemy import ZopeTransactionExtension
 
 
-DBSession = scoped_session(sessionmaker())
+DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
 
@@ -25,44 +26,49 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True)
-    username = Column(String, nullable=False, unique=True)
-    # title = Column(String)
-    # firstname = Column(String)
-    # middlename = Column(String)
-    # lastname = Column(String)
-    # suffix = Column(String)
-    fullname = Column(String)
-    # interests = Column(String)
-    # affiliationinstitution_url = Column(String)
-    # affiliationinstitution = Column(String)
-    # preferredlang = Column(String)
-    # otherlangs = Column(String)
-    # imageurl = Column(String)
-    # location = Column(String)
-    # biography = Column(String)
-    # recommendations = Column(String)
-    # homepage = Column(String)
+    firstname = Column(String)
+    middlename = Column(String)
+    lastname = Column(String)
     email = Column(String)
 
-    identifiers  = relationship("Identifier", backref="users")
+    # A user can have many identities, but an identity can only be
+    #   associated with one user.
+    identities = relationship('Identity', back_populates='user')
+
+    def init(self):
+        self.firstname = ''
+        self.middlename = ''
+        self.lastname = ''
+        self.email = ''
 
     def __repr__(self):
-        return "%s-%s" % (self.fullname, self.id)
+        return "<{} '{}' - {}>".format(self.__class__.__name__,
+                                       self.fullname, self.id)
+
+    @property
+    def fullname(self):
+        items = [self.firstname, self.middlename, self.lastname]
+        items = [n for n in items if n]
+        return ' '.join(items)
 
 
-class Identifier(Base):
-    __tablename__   = "identifiers"
+class Identity(Base):
+    __tablename__   = "identities"
 
     id = Column(Integer, primary_key=True)
     identifier = Column(String, nullable=False, unique=True)
     type = Column(String)  # (Enum, "persona", "openid")
-    # user_id = Column(String, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey('users.id'))
 
+    user = relationship('User', back_populates='identities')
 
-    def __init__(self, id=None, type=None):
-        """ """
-        self.id = id
+    def __init__(self, ident_string, type='', user=None):
+        self.identifier = ident_string
         self.type = type
+        if user is not None:
+            self.user_id = user.id
+        else:
+            self.user_id = None
 
     def __repr__(self):
-        return "<{} '{}'>".format(self.__class__.__name__, self.id)
+        return "<{} {}>".format(self.__class__.__name__, self.id)
