@@ -184,23 +184,11 @@ bob-org.cnx.user-00bb0cae-970b-4fc6-87be-0b8b3da35187
 
 
 """
-import json
-import uuid
-import pprint
+from .models import (
+    Base, DBSession as db_session,
+    Identity, User,
+    )
 
-from sqlalchemy import (Table, ForeignKey, or_,
-                        Column, Integer, String,
-                        Text, Enum)
-from sqlalchemy.orm import relationship
-import sqlalchemy.types
-import datetime
-
-
-from cnxbase import CNXBase
-
-#shared session from backend module, for pooling
-
-from .models import Base, DBSession as db_session
 
 def dolog(*args, **kwargs):
     pass
