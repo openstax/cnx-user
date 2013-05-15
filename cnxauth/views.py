@@ -17,16 +17,6 @@ from . import usermodel
 logger = logging.getLogger('cnxauth')
 
 
-@view_config(name='identifier', request_method='GET', renderer='json')
-def get_user_by_identifier(request):
-    ident = request.matchdict['id']
-    try:
-        user = usermodel.get_user_by_identifier(ident)
-    except usermodel.Rhaptos2Error, e:
-        raise NotFound()
-    return {'id': user.id, 'identifier': user.identifier, 'type': user.type}
-
-
 @view_config(name='get-user', request_method='GET', renderer='json')
 def get_user(request):
     id = request.multidict['id']

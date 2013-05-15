@@ -16,7 +16,6 @@ from .models import (
 
 
 def register_api(config):
-    config.add_route('identifier', '/ident/{id}')
     config.add_route('post-user', '/users/')
     config.add_route('get-user', '/users/{id}')
     config.add_route('put-user', '/users/{id}')
