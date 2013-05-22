@@ -17,7 +17,7 @@ from . import usermodel
 logger = logging.getLogger('cnxauth')
 
 
-@view_config(name='get-user', request_method='GET', renderer='json')
+@view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):
     id = request.multidict['id']
     try:
@@ -27,7 +27,7 @@ def get_user(request):
     return {'id': user.id, 'fullname': user.fullname, 'email': user.email}
 
 
-@view_config(name='post-user', request_method=['POST', 'PUT'])
+@view_config(route_name='post-user', request_method=['POST', 'PUT'])
 def post_user(request):
     id = request.multidict.get('id', None)
     data = request.json_body
@@ -40,7 +40,7 @@ def post_user(request):
     return "Saved"
 
 
-@view_config(name='query', request_method='GET', renderer='json')
+@view_config(route_name='query', request_method='GET', renderer='json')
 def query(request):
     q = request.query_string.get('q', '')
     try:
