@@ -10,7 +10,8 @@ define [
   router = new Backbone.Router
   router.route '', 'index', ->
     view = new views.SplashView
-    $('[role=main]').html view.render().el
+      el: '[role=main]'
+    view.render()
   router.route 'register', 'register', ->
     # Pass in the authentication identity provider collection.
     providers = new models.IdentityProviders()
@@ -21,12 +22,16 @@ define [
   router.route 'login', 'login', ->
     # Pass in the authentication identity provider collection.
     ##providers = models.IdentityProviders
-    view = new views.LoginView  ##collection: providers
-    $('[role=main]').html view.render().el
+    view = new views.LoginView
+      el: '[role=main]'
+      ##collection: providers
+    view.render()
   router.route 'users/:id', 'profile', (id) ->
     ##profile = models.Profile
-    view = new views.ProfileView   ##model: profile
-    $('[role=main]').html view.render().el
+    view = new views.ProfileView
+      el: '[role=main]'
+      ##model: profile
+    view.render()
 
   # Intercept all clicks on 'a' tags.
   $(document).on 'click', 'a:not([data-bypass])', (e) ->
