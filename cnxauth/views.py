@@ -5,17 +5,25 @@
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 # ###
+import os
 import logging
 
 from pyramid.httpexceptions import HTTPBadRequest, HTTPInternalServerError
 from pyramid.exceptions import NotFound
+from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 
 from . import usermodel
 
 
 logger = logging.getLogger('cnxauth')
+here = os.path.abspath(os.path.dirname(__file__))
 
+@view_config(route_name='index')
+@view_config(route_name='catchall')
+def index(request):
+    with open(os.path.join(here, 'assets', 'index.html'), 'r') as f:
+        return render_to_response('string', f.read())
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):
