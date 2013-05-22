@@ -14,8 +14,11 @@ define [
         @$el.html splashTmpl
         return @
     RegistrationView: Backbone.View.extend
+      initialize: ->
+        @listenTo(@collection, 'reset', @render)
       render: ->
-        @$el.html registrationTmpl
+        template = registrationTmpl providers: @collection.toJSON()
+        @$el.html template
         return @
     LoginView: Backbone.View.extend
       render: ->

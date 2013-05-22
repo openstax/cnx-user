@@ -13,13 +13,11 @@ define [
     $('[role=main]').html view.render().el
   router.route 'register', 'register', ->
     # Pass in the authentication identity provider collection.
-    providers = new models.IdentityProviders().fetch
-      success: (collection, response) ->
-        console.log "#{collection.length} identity providers available"
-      error: (collection, response) ->
-        console.log "Something when wrong while trying to fetch the list of identity providers."
-    view = new views.RegistrationView collection: providers
-    $('[role=main]').html view.render().el
+    providers = new models.IdentityProviders()
+    view = new views.RegistrationView
+      el: '[role=main]'
+      collection: providers
+    view.render()
   router.route 'login', 'login', ->
     # Pass in the authentication identity provider collection.
     ##providers = models.IdentityProviders
