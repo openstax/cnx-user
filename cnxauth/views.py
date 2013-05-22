@@ -29,9 +29,9 @@ def index(request):
 def identity_providers(request):
     """Produces a data structure of identity providers."""
     providers = [
-        # {id: <string>, name: <human-readable-name>},
-        {'id': 'google', 'name': 'Google'},
-        {'id': 'openid', 'name': 'OpenID'},
+        # {id: <string>, name: <human-readable-name>, location: <login-url>},
+        {'id': 'google', 'name': 'Google', 'location': 'http://yahoo.com'},
+        {'id': 'openid', 'name': 'OpenID', 'location': 'http://yahoo.com'},
         ]
     return providers
 
