@@ -23,6 +23,7 @@ def register_bbb(config):
 
 def register_api(config):
     """Registers the application programing interface (API)."""
+    config.add_route('identity-providers', '/identity-providers')
     config.add_route('post-user', '/users/')
     config.add_route('get-user', '/users/{id}')
     config.add_route('put-user', '/users/{id}')

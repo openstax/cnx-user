@@ -25,6 +25,16 @@ def index(request):
     with open(os.path.join(here, 'assets', 'index.html'), 'r') as f:
         return render_to_response('string', f.read())
 
+@view_config(route_name='identity-providers', renderer='json')
+def identity_providers(request):
+    """Produces a data structure of identity providers."""
+    providers = [
+        # {id: <string>, name: <human-readable-name>},
+        {'id': 'google', 'name': 'Google'},
+        {'id': 'openid', 'name': 'OpenID'},
+        ]
+    return providers
+
 @view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):
     id = request.multidict['id']
