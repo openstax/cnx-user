@@ -1,16 +1,8 @@
-.DS_Store
+# Development #
+###############
 *.pyc
 *.pyo
-env
-env*
-dist
-*.egg
 *.egg-info
-_mailinglist
 .tox
 *.log
 *.*~
-#*.*#
-*.html
-*/_build/*
-*thirdparty*
