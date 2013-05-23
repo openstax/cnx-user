@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 install_requires = (
     'pyramid',
     'requests',
+    'velruse',
     'waitress',
     # SQL integration packages
     'transaction',

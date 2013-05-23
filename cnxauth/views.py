@@ -13,6 +13,7 @@ from pyramid.exceptions import NotFound
 from pyramid.renderers import render_to_response
 from pyramid.view import view_config
 
+import velruse
 from . import usermodel
 
 
@@ -29,9 +30,27 @@ def index(request):
 def identity_providers(request):
     """Produces a data structure of identity providers."""
     providers = [
-        # {id: <string>, name: <human-readable-name>, location: <login-url>},
-        {'id': 'google', 'name': 'Google', 'location': 'http://yahoo.com'},
-        {'id': 'openid', 'name': 'OpenID', 'location': 'http://yahoo.com'},
+        # {id: <string>, name: <human-readable-name>,
+        #  location: <login-url>,
+        #  # optionally...
+        #  fields: {name: <name>, type: (text|hidden),
+        #           # necessary for hidden fields
+        #           value: <default-value>,
+        #           # useful for text fields
+        #           label: <text>,
+        #           placeholder: <text>,
+        #           },
+        #  autosubmit: (True|False),
+        #  },
+        {'id': 'openid', 'name': 'OpenID',
+         'location': velruse.login_url(request, 'openid'),
+         'fields': [{'type': 'text', 'name': 'openid_identifier',
+                     'label': "OpenID identifier string",
+                     'placeholder': 'http://me.example.com',
+                     },
+                    ],
+         'auto_submit': False,
+         },
         ]
     return providers
 

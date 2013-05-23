@@ -8,12 +8,15 @@
 """Authentication and user profile web application"""
 from pyramid.config import Configurator
 from pyramid.static import static_view
+from pyramid.session import UnencryptedCookieSessionFactoryConfig
+
 from sqlalchemy import engine_from_config
 
 from .models import (
     DBSession,
     Base,
     )
+
 
 def register_bbb(config):
     """Registers the backwards compatible application programming
@@ -37,6 +40,34 @@ def register_www_iface(config):
     config.add_route('index', '/')
     config.add_route('catchall', '/*path')
 
+def set_up_velruse(config):
+    """Initialize and configure Velruse as a plugin. See also:
+    http://pythonhosted.org/velruse/usage.html#as-a-pyramid-plugin
+    """
+    # XXX identity providers are currently hard coded. This needs to
+    #     be a settings value.
+    # XXX After the initial implementation this needs to be revisited
+    #     for clarity.
+    settings = config.registry.settings
+
+    session_factory = UnencryptedCookieSessionFactoryConfig(
+        settings['session.secret'],
+        )
+    config.set_session_factory(session_factory)
+
+    # Server-side route registration
+    # config.add_route('login', '/server/login')
+    # config.add_route('login-callback', '/server/login/callback')
+
+    # Most of these providers have loaders for settings. OpenID is one
+    #   of them that doesn't. =/  Refactor later please. :)
+    config.include('velruse.providers.openid')
+    config.add_openid_login(realm=settings['provider.openid.realm'],
+                            storage=None,  # Defaults to in-memory storage.
+                            login_path='/server/login/openid',
+                            callback_path='/server/login/openid/callback',
+                            )
+
 def main(global_config, **settings):
     """This function returns a Pyramid WSGI application."""
     engine = engine_from_config(settings, 'sqlalchemy.')
@@ -45,6 +76,7 @@ def main(global_config, **settings):
     config = Configurator(settings=settings)
     config.include(register_bbb)
     config.include(register_api, route_prefix='/api')
+    config.include(set_up_velruse)
     config.include(register_www_iface)
     config.scan()
     return config.make_wsgi_app()
