@@ -51,6 +51,10 @@ def identity_providers(request):
                     ],
          'auto_submit': False,
          },
+        {'id': 'google', 'name': 'Google',
+         'location': velruse.login_url(request, 'google'),
+         'auto_submit': True,
+         },
         ]
     return providers
 

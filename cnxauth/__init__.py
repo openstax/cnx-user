@@ -68,6 +68,10 @@ def set_up_velruse(config):
                             callback_path='/server/login/openid/callback',
                             )
 
+    config.include('velruse.providers.google_oauth2')
+    config.add_google_oauth2_login_from_settings()
+
+
 def main(global_config, **settings):
     """This function returns a Pyramid WSGI application."""
     engine = engine_from_config(settings, 'sqlalchemy.')
