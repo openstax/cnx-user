@@ -54,6 +54,19 @@ def identity_providers(request):
         ]
     return providers
 
+
+@view_config(context='velruse.AuthenticationComplete', renderer='json')
+def login_complete(request):
+    context = request.context
+    result = {
+        'provider_type': context.provider_type,
+        'provider_name': context.provider_name,
+        'profile': context.profile,
+        'credentials': context.credentials,
+        }
+    return result
+
+
 @view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):
     id = request.multidict['id']
