@@ -62,6 +62,12 @@ def identity_providers(request):
 @view_config(context='velruse.AuthenticationComplete', renderer='json')
 def login_complete(request):
     context = request.context
+    # Create user and identity entries if none are found.
+
+    # Check the session for endpoint redirection otherwise pop the
+    #   user over to their user profile /user/{id}
+
+    # XXX Developer debug output
     result = {
         'provider_type': context.provider_type,
         'provider_name': context.provider_name,
