@@ -39,8 +39,8 @@ class ModelRelationshipTests(unittest.TestCase):
             user.lastname = lastname
             DBSession.add(user)
             DBSession.flush()
-            jone_ident = Identity(jone_identifier, user=user)
-            hao_ident = Identity(hao_identifier, user=user)
+            jone_ident = Identity(jone_identifier, '', '', user=user)
+            hao_ident = Identity(hao_identifier, '', '', user=user)
             DBSession.add_all([jone_ident, hao_ident])
         with transaction.manager:
             user = DBSession.query(User) \

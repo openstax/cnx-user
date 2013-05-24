@@ -55,14 +55,10 @@ def set_up_velruse(config):
         )
     config.set_session_factory(session_factory)
 
-    # Server-side route registration
-    # config.add_route('login', '/server/login')
-    # config.add_route('login-callback', '/server/login/callback')
-
     # Most of these providers have loaders for settings. OpenID is one
     #   of them that doesn't. =/  Refactor later please. :)
     config.include('velruse.providers.openid')
-    config.add_openid_login(realm=settings['provider.openid.realm'],
+    config.add_openid_login(realm=settings.get('velruse.openid.realm'),
                             storage=None,  # Defaults to in-memory storage.
                             login_path='/server/login/openid',
                             callback_path='/server/login/openid/callback',
