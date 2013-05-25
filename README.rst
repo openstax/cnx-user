@@ -1,95 +1,43 @@
-=============
-rhaptos2.user
-=============
+CNX Authentication Service
+==========================
 
-Installation:
+This is a single sign-on application for the Connexions system. It
+provides user profiles, identity management, authetication procedures
+and autentication delegate connections.
 
-1. create a clean venv and populate from requirements.txt
+Getting started
+---------------
 
-   virtualenv ~/venvs/foobar -r rhaptos2.user/requirements.txt
+This will require a 'Postgres' install. If you are using the
+``development.ini`` configuration file, you'll want to set up a
+``cnxauth`` database for user ``cnxauth`` with the password
+``cnxauth``.
 
-2. run setup.py develop against common and user
+The application is build in Python and can be installed using the
+typical Python distribution installation procedure demonstrated
+below::
 
-   . bin/activate
-   cd rhaptos2.common
-   python setup.py develop
+    $ python setup.py install
 
-   cd rhaptos2.user
-   python setup.py develop
-
-3. cd rhaptos2.user/rhaptos/user
-   python run.py --debug --config=../../local.ini
-
-4. adjust local.ini as needed, the defaults give you access to a
-   postgresdbase now. (Yea security !)
-
-
-4.a within the venv so:
-    
-    python runtests.py --config=../../../local.ini --prepopulate=Y
-
-
-5. You should be able to successfully 
-
-   http://localhost:5000 - hello world
-   http://localhost:5000/users/ - json list of dbase (max 25, solely for dev)
-   http://localhost:5000/user/?user=org.cnx.user-80eeb317-2bb9-4230-8f1f-d62509d2bf4f
-   (adjust thsi last one with uuid from above)
-
-
-6. Also note shell.py will give you a command line to dbase for testing usermodel
-
+This will install the package and a few application specific
+scripts. One of these scripts is used to initialize the database with
+the applications schema.
 ::
 
+    $ initialize_cnx-auth_db development.ini
 
+To run the application, supply the ``pserve`` (the Pyramid framework's
+serve script) with an application configuration file
+(``development.ini`` has been supplied with the package).
+::
 
-    (vuser)user(convert2newconf)$ python -i shell.py 
-    Connecting to Database:
-    www.frozone.mikadosoftware.com
-    You are now in shell, without access to Flask App, but with dbase
-    You may want to review prepopulate.py for notes on prepopulating the dbase during development
-    >>> q = db_session.query(usermodel.User)
-    >>> q.all()
-    [<rhaptos2.user.usermodel.User object at 0x807476950>]
-    >>> 
+    $ pserve development.ini
 
+You can then surf to the address printed out by the above command.
 
-Notes to be tidied up later::
+License
+-------
 
- You will need a SSL-enabled IP based access to a postgresql server (9.1 tested, a bit)
- Add user conneciton string details to local.ini
-
- notes for setting postgres::
-
-
-    create user test1 with password 'xxx';
-    create database dbtest;
-    GRANT ALL PRIVILEGES ON dbtest to usertest;
-
-    pg_hba.conf - set addresses for md5 to all
-    postgres,conf - set listenaddresses to all, use SSL and password encryption on
-    sudo service postgresql restart
-
-    test access from psql -d dbtest -U usertest -h www.frozone.mikadosoftware.com
-
-
- First steps:
-
- 1. enter the venv and 
-
-    python -i shell.py
-
- This should instantiate the database and store one user in the dbase
- This is a genuine openid (I'll add them a persona soon) - so you can authenticate 
- against them, password is pass1 (I think)
-
- 2. Now try running the app as above
-
-
-License:
-
-This software is subject to the provisions of the GNU Affero General Public License Version 3.0 (AGPL). See license.txt for details. 
+This software is subject to the provisions of the GNU Affero General
+Public License Version 3.0 (AGPL). See license.txt for details. 
 Copyright (c) 2013 Rice University
-
-
-
