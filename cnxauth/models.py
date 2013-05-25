@@ -75,9 +75,7 @@ class Identity(Base):
         self.profile = profile
         self.credentials = credentials
         if user is not None:
-            self.user_id = user.id
-        else:
-            self.user_id = None
+            self.user = user
 
     def __repr__(self):
         return "<{} {}>".format(self.__class__.__name__, self.id)
