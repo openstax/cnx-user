@@ -13,6 +13,48 @@ from pyramid import testing
 from .models import DBSession
 
 
+class UidDiscoverTests(unittest.TestCase):
+    # Tests the utils.discover_uid function.
+    # The data here is a mock of the profile data coming out of a
+    #   velruse.AuthenticationComplete object.
+
+    def make_one(self, profile):
+        from velruse import AuthenticationComplete
+        obj = AuthenticationComplete
+        setattr(obj, 'profile', profile)
+        return obj
+
+    def test_w_no_info(self):
+        # Case where the function is supplied with little or no data.
+        # I can't say this would ever happen, but if it does it will
+        #   be ready for it.
+        from .utils import discover_uid
+        data = self.make_one({"accounts": []})
+        with self.assertRaises(ValueError):
+            uid = discover_uid(data)
+
+    def test_w_general_info(self):
+        from .utils import discover_uid
+        expected_uid = 'http://junk.myopenid.com'
+        data = self.make_one({"accounts": [{"username": expected_uid,
+                                            "domain": "openid.net"}]})
+        uid = discover_uid(data)
+        self.assertEqual(uid, expected_uid)
+
+    def test_w_double_username(self):
+        # Case were more than one username is supplied. We should take
+        #   the first when a prefered username option hasn't been specified.
+        from .utils import discover_uid
+        expected_uid = 'http://junk.myopenid.com'
+        data = self.make_one({"accounts": [{"username": expected_uid,
+                                          "domain": "openid.net"},
+                                         {"username": "not-this-one",
+                                          "domain": "example.com"},
+                                         ]})
+        uid = discover_uid(data)
+        self.assertEqual(uid, expected_uid)
+
+
 class ModelRelationshipTests(unittest.TestCase):
 
     def setUp(self):
