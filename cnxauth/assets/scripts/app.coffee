@@ -15,6 +15,7 @@ define [
   router.route 'register', 'register', ->
     # Pass in the authentication identity provider collection.
     providers = new models.IdentityProviders()
+    providers.fetch reset: true
     view = new views.RegistrationView
       el: '[role=main]'
       collection: providers
