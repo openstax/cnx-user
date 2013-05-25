@@ -12,6 +12,14 @@ __all__ = ('discover_uid',)
 def discover_uid(auth_complete):
     """Finds the prefered user name or id in
     the given velruse.AuthenticationComplete object as 'auth_complete'."""
+    # Has a preferred username been supplied?
+    try:
+        return auth_complete.profile['preferredUsername']
+    except KeyError:
+        # Couldn't be that easy. :(
+        pass
+
+    # Attempt to retrieve the uid from the accounts listing.
     accounts = auth_complete.profile['accounts']
     try:
         uid = accounts[0]['username']

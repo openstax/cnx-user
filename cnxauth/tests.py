@@ -20,7 +20,7 @@ class UidDiscoverTests(unittest.TestCase):
 
     def make_one(self, profile):
         from velruse import AuthenticationComplete
-        obj = AuthenticationComplete
+        obj = AuthenticationComplete()
         setattr(obj, 'profile', profile)
         return obj
 
@@ -42,7 +42,7 @@ class UidDiscoverTests(unittest.TestCase):
         self.assertEqual(uid, expected_uid)
 
     def test_w_double_username(self):
-        # Case were more than one username is supplied. We should take
+        # Case where more than one username is supplied. We should take
         #   the first when a prefered username option hasn't been specified.
         from .utils import discover_uid
         expected_uid = 'http://junk.myopenid.com'
@@ -51,6 +51,19 @@ class UidDiscoverTests(unittest.TestCase):
                                          {"username": "not-this-one",
                                           "domain": "example.com"},
                                          ]})
+        uid = discover_uid(data)
+        self.assertEqual(uid, expected_uid)
+
+    def test_w_preferred_username(self):
+        # Case where a preferred username has been supplied.
+        from .utils import discover_uid
+        expected_uid = 'me@example.com'
+        data = self.make_one({"accounts": [{"username": "not-this-one",
+                                            "domain": "openid.net"},
+                                           {"username": expected_uid,
+                                            "domain": "example.com"},
+                                           ],
+                              "preferredUsername": expected_uid})
         uid = discover_uid(data)
         self.assertEqual(uid, expected_uid)
 
