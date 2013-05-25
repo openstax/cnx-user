@@ -5,12 +5,22 @@
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 # ###
+import os
 import unittest
+import json
 import transaction
 
 from pyramid import testing
 
 from .models import DBSession
+
+
+here = os.path.abspath(os.path.dirname(__file__))
+test_data_directory = os.path.join(here, 'test-data')
+with open(os.path.join(test_data_directory, 'idents.json'), 'r') as fp:
+    _TEST_IDENTS = json.load(fp)
+TEST_OPENID_IDENTS = _TEST_IDENTS['openid']
+TEST_GOOGLE_IDENTS = _TEST_IDENTS['google']
 
 
 class UidDiscoverTests(unittest.TestCase):
@@ -110,3 +120,48 @@ class ModelRelationshipTests(unittest.TestCase):
                 .one()
             self.assertIn(ident2, user.identities)
             self.assertEqual(ident2.user, user)
+
+
+class RegistrationAndLoginViewTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = testing.setUp()
+        from sqlalchemy import create_engine
+        engine = create_engine('sqlite://')
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+        # The following is used to register the routes used by the view.
+        from . import register_www_iface
+        register_www_iface(self.config)
+
+    def tearDown(self):
+        DBSession.remove()
+        testing.tearDown()
+
+    def test_first_local_visit(self):
+        # As first time visitor, I'd like to register and then edit my
+        #   profile, because I'd like to have this this service with
+        #   other CNX services.
+        # This case illustrates a first time visitor that is directly
+        #    interacting (not forwarded via another service) with the
+        #    service. This case not does deal with actually editing
+        #    the profile, but getting the visitor to a place where
+        #    they can edit the profile.
+        request = testing.DummyRequest()
+        # Create the request context.
+        from velruse import AuthenticationComplete
+        test_ident = TEST_OPENID_IDENTS[0]
+        request.context = AuthenticationComplete(**test_ident)
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual('http://michaelmulich.myopenid.com/',
+                         identity.identifier)

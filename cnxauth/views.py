@@ -7,13 +7,17 @@
 # ###
 import os
 import logging
-
-from pyramid.httpexceptions import HTTPBadRequest, HTTPInternalServerError
-from pyramid.exceptions import NotFound
-from pyramid.renderers import render_to_response
-from pyramid.view import view_config
+import json
 
 import velruse
+from pyramid import httpexceptions
+from pyramid.response import Response
+from pyramid.renderers import render_to_response
+from pyramid.view import view_config
+from sqlalchemy.exc import DBAPIError
+
+from .utils import discover_uid
+from .models import DBSession, User, Identity
 from . import usermodel
 
 
@@ -21,7 +25,7 @@ logger = logging.getLogger('cnxauth')
 here = os.path.abspath(os.path.dirname(__file__))
 
 @view_config(route_name='index')
-@view_config(route_name='catchall')
+@view_config(route_name='catch-all')
 def index(request):
     with open(os.path.join(here, 'assets', 'index.html'), 'r') as f:
         return render_to_response('string', f.read())
@@ -59,22 +63,31 @@ def identity_providers(request):
     return providers
 
 
-@view_config(context='velruse.AuthenticationComplete', renderer='json')
+@view_config(context='velruse.AuthenticationComplete')
 def login_complete(request):
     context = request.context
+    identifier = discover_uid(context)
+
     # Create user and identity entries if none are found.
+    try:
+        user = User()
+        DBSession.add(user)
+        DBSession.flush()
+        identity = Identity(identifier,
+                            context.provider_name, context.provider_type,
+                            json.dumps(context.profile),
+                            json.dumps(context.credentials),
+                            user=user)
+        DBSession.add(identity)
+    except DBAPIError:
+        raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
+                                                    content_type='text/plain',
+                                                    )
 
     # Check the session for endpoint redirection otherwise pop the
     #   user over to their user profile /user/{id}
-
-    # XXX Developer debug output
-    result = {
-        'provider_type': context.provider_type,
-        'provider_name': context.provider_name,
-        'profile': context.profile,
-        'credentials': context.credentials,
-        }
-    return result
+    location = request.route_url('www-get-user', id=user.id)
+    return httpexceptions.HTTPFound(location=location)
 
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')
@@ -82,8 +95,8 @@ def get_user(request):
     id = request.multidict['id']
     try:
         user = usermodel.get_user(id)
-    except usermodel.Rhaptos2Error, e:
-        raise NotFound()
+    except usermodel.Rhaptos2Error:
+        raise httpexceptions.HTTPNotFound()
     return {'id': user.id, 'fullname': user.fullname, 'email': user.email}
 
 
@@ -92,7 +105,7 @@ def post_user(request):
     id = request.multidict.get('id', None)
     data = request.json_body
     if request.method == 'PUT' and id is None:
-        raise HttpBadRequest("PUT without an ID")
+        raise httpexceptions.HttpBadRequest("PUT without an ID")
     elif request.metho == 'POST':
         user = usermodel.post_user(data)
     else:
@@ -106,5 +119,22 @@ def query(request):
     try:
         matchlist = usermodel.get_user_by_name(q)
     except usermodel.Rhaptos2Error, e:
-        raise HTTPInternalServerError()
+        raise httpexceptions.HTTPInternalServerError()
     return [u.id for u in matchlist]
+
+
+connection_error_message = """\
+Pyramid is having a problem using your SQL database.  The problem
+might be caused by one of the following things:
+
+1.  You may need to run the "initialize_{{project}}_db" script
+    to initialize your database tables.  Check your virtual
+    environment's "bin" directory for this script and try to run it.
+
+2.  Your database server may not be running.  Check that the
+    database server referred to by the "sqlalchemy.url" setting in
+    your "development.ini" file is running.
+
+After you fix the problem, please restart the Pyramid application to
+try it again.
+"""

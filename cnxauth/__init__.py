@@ -38,7 +38,12 @@ def register_www_iface(config):
     config.add_static_view('styles', 'assets/styles', cache_max_age=0)
     config.add_static_view('templates', 'assets/templates', cache_max_age=0)
     config.add_route('index', '/')
-    config.add_route('catchall', '/*path')
+    config.add_route('catch-all', '/*path')
+    # These routes are deliberately placed after the catch-all route,
+    #   because they are not wired to any on-server views. They are
+    #   however wired into the client-side/front-end routes framework.
+    config.add_route('www-get-user', '/users/{id}')
+
 
 def set_up_velruse(config):
     """Initialize and configure Velruse as a plugin. See also:
