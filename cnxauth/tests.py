@@ -165,3 +165,6 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
         identity = user.identities[0]
         self.assertEqual('http://michaelmulich.myopenid.com/',
                          identity.identifier)
+        self.assertEqual(request.route_url('www-get-user', id=user.id),
+                         resp.location)
+        self.assertEqual(302, resp.status_int)
