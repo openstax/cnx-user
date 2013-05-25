@@ -14,6 +14,7 @@ def discover_uid(auth_complete):
     the given velruse.AuthenticationComplete object as 'auth_complete'."""
     accounts = auth_complete.profile['accounts']
     try:
-        uid = accounts[0]
+        uid = accounts[0]['username']
     except IndexError:
         raise ValueError("Missing account values")
+    return uid
