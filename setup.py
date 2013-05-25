@@ -9,6 +9,7 @@ install_requires = (
     'waitress',
     # SQL integration packages
     'transaction',
+    'pyramid_tm',
     'SQLAlchemy',
     'zope.sqlalchemy',
     'psycopg2',
