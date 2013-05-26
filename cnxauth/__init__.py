@@ -24,13 +24,13 @@ def register_bbb(config):
     # TODO bring these back
     pass
 
+
 def register_api(config):
     """Registers the application programing interface (API)."""
     config.add_route('identity-providers', '/identity-providers')
-    config.add_route('post-user', '/users/')
-    config.add_route('get-user', '/users/{id}')
-    config.add_route('put-user', '/users/{id}')
-    config.add_route('query', '/users/query')
+    config.add_route('get-user', '/users/{user_id}')
+    config.add_route('put-user', '/users/{user_id}')
+
 
 def register_www_iface(config):
     """Registers routes and assets for the web interface."""
