@@ -28,10 +28,11 @@ define [
       ##collection: providers
     view.render()
   router.route 'users/:id', 'profile', (id) ->
-    ##profile = models.Profile
+    user = new models.User id: id
+    user.fetch reset: true
     view = new views.ProfileView
       el: '[role=main]'
-      ##model: profile
+      model: user
     view.render()
 
   # Intercept all clicks on 'a' tags.

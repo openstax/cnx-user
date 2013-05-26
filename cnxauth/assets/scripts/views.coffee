@@ -62,8 +62,10 @@ define [
         @$el.html loginTmpl
         return @
     ProfileView: Backbone.View.extend
+      initialize: ->
+        @listenTo(@model, 'sync', @render)
       render: ->
-        template = profileTmpl model: @model
+        template = profileTmpl @model.toJSON()
         @$el.html template
         return @
     }
