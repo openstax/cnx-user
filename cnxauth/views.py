@@ -94,10 +94,14 @@ def login_complete(request):
 def get_user(request):
     id = request.matchdict['id']
     try:
-        user = usermodel.get_user(id)
-    except usermodel.Rhaptos2Error:
+        user = DBSession.query(User).filter(User.id==id).first()
+    except DBAPIError:
+        raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
+                                                    content_type='text/plain',
+                                                    )
+    if user is None:
         raise httpexceptions.HTTPNotFound()
-    return {'id': user.id, 'fullname': user.fullname, 'email': user.email}
+    return user
 
 
 @view_config(route_name='post-user', request_method=['POST', 'PUT'])

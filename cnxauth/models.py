@@ -45,6 +45,9 @@ class User(Base):
         return "<{} '{}' - {}>".format(self.__class__.__name__,
                                        self.fullname, self.id)
 
+    def __json__(self, request):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     @property
     def fullname(self):
         items = [self.firstname, self.middlename, self.lastname]
