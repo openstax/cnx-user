@@ -8,6 +8,8 @@
 """Authentication and user profile web application"""
 from pyramid.config import Configurator
 from pyramid.static import static_view
+from pyramid.authentication import AuthTktAuthenticationPolicy
+from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
 from sqlalchemy import engine_from_config
@@ -84,6 +86,16 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.bind = engine
     config = Configurator(settings=settings)
+    authentication_policy = AuthTktAuthenticationPolicy(
+            secret=settings['auth.secret'],
+            ##callback=group_finder,
+            hashalg=settings.get('auth.hash-algorithm', 'sha512'),
+            )
+    config.set_authentication_policy(authentication_policy)
+    authorization_policy = ACLAuthorizationPolicy()
+    config.set_authorization_policy(authorization_policy)
+
+    # Route registration
     config.include(register_bbb)
     config.include(register_api, route_prefix='/api')
     config.include(set_up_velruse)
