@@ -89,7 +89,7 @@ def login_complete(request):
             .filter(Identity.identifier==identifier) \
             .filter(Identity.name==context.provider_name) \
             .filter(Identity.type==context.provider_type) \
-            .one()
+            .first()
         if not identity:
             # So we have a new identity and potentially a new user, but
             #   that is unknown at this time.
