@@ -24,4 +24,5 @@ define [
   return {
     IdentityProviders: IdentityProviders
     User: User
+    Users: Users
     }
