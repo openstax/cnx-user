@@ -104,29 +104,6 @@ def get_user(request):
     return user
 
 
-@view_config(route_name='post-user', request_method=['POST', 'PUT'])
-def post_user(request):
-    id = request.matchdict.get('id', None)
-    data = request.json_body
-    if request.method == 'PUT' and id is None:
-        raise httpexceptions.HttpBadRequest("PUT without an ID")
-    elif request.metho == 'POST':
-        user = usermodel.post_user(data)
-    else:
-        user = usermodel.put_user(data, id)
-    return "Saved"
-
-
-@view_config(route_name='query', request_method='GET', renderer='json')
-def query(request):
-    q = request.query_string.get('q', '')
-    try:
-        matchlist = usermodel.get_user_by_name(q)
-    except usermodel.Rhaptos2Error, e:
-        raise httpexceptions.HTTPInternalServerError()
-    return [u.id for u in matchlist]
-
-
 connection_error_message = """\
 Pyramid is having a problem using your SQL database.  The problem
 might be caused by one of the following things:
