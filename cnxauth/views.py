@@ -92,7 +92,7 @@ def login_complete(request):
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):
-    id = request.matchdict['id']
+    id = request.matchdict['user_id']
     try:
         user = DBSession.query(User).filter(User.id==id).first()
     except DBAPIError:
@@ -102,6 +102,13 @@ def get_user(request):
     if user is None:
         raise httpexceptions.HTTPNotFound()
     return user
+
+
+@view_config(route_name='get-user-identities', request_method='GET',
+             renderer='json')
+def get_user_identities(request):
+    user = get_user(request)
+    return user.identities
 
 
 connection_error_message = """\

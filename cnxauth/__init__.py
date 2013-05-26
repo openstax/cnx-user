@@ -30,6 +30,11 @@ def register_api(config):
     config.add_route('identity-providers', '/identity-providers')
     config.add_route('get-user', '/users/{user_id}')
     config.add_route('put-user', '/users/{user_id}')
+    config.add_route('get-user-identities', '/users/{user_id}/identities')
+    config.add_route('get-user-identity',
+                     '/users/{user_id}/identities/{identity_id}')
+    config.add_route('delete-user-identity',
+                     '/users/{user_id}/identities/{identity_id}')
 
 
 def register_www_iface(config):

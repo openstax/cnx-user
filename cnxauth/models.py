@@ -82,3 +82,6 @@ class Identity(Base):
 
     def __repr__(self):
         return "<{} {}>".format(self.__class__.__name__, self.id)
+
+    def __json__(self, request):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
