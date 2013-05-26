@@ -13,6 +13,7 @@ import velruse
 from pyramid import httpexceptions
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
+from pyramid.security import authenticated_userid, remember
 from pyramid.view import view_config
 from sqlalchemy.exc import DBAPIError
 
@@ -23,6 +24,7 @@ from . import usermodel
 
 logger = logging.getLogger('cnxauth')
 here = os.path.abspath(os.path.dirname(__file__))
+
 
 @view_config(route_name='index')
 @view_config(route_name='catch-all')
@@ -63,6 +65,19 @@ def identity_providers(request):
     return providers
 
 
+def acquire_user(request):
+    """Retrieve the user from the request or make one."""
+    user_id = authenticated_userid(request)
+    if user_id is not None:
+        user = DBSession.query(User) \
+            .filter(User.id==user_id) \
+            .one()
+    else:
+        user = User()
+        DBSession.add(user)
+    return user
+
+
 @view_config(context='velruse.AuthenticationComplete')
 def login_complete(request):
     context = request.context
@@ -70,24 +85,36 @@ def login_complete(request):
 
     # Create user and identity entries if none are found.
     try:
-        user = User()
-        DBSession.add(user)
-        DBSession.flush()
-        identity = Identity(identifier,
-                            context.provider_name, context.provider_type,
-                            json.dumps(context.profile),
-                            json.dumps(context.credentials),
-                            user=user)
-        DBSession.add(identity)
+        identity = DBSession.query(Identity) \
+            .filter(Identity.identifier==identifier) \
+            .filter(Identity.name==context.provider_name) \
+            .filter(Identity.type==context.provider_type) \
+            .one()
+        if not identity:
+            # So we have a new identity and potentially a new user, but
+            #   that is unknown at this time.
+            user = acquire_user(request)
+            if user.id is None:
+                # We need the user id to make the relationship.
+                DBSession.flush()
+            identity = Identity(identifier,
+                                context.provider_name, context.provider_type,
+                                json.dumps(context.profile),
+                                json.dumps(context.credentials),
+                                user=user)
+            DBSession.add(identity)
+        user = identity.user
     except DBAPIError:
         raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
                                                     content_type='text/plain',
                                                     )
+    # Remember the authenticated user for future requests.
+    auth_headers = remember(request, user.id)
 
-    # Check the session for endpoint redirection otherwise pop the
-    #   user over to their user profile /user/{id}
+    # TODO Check the session for endpoint redirection otherwise pop the
+    #      user over to their user profile /user/{id}
     location = request.route_url('www-get-user', id=user.id)
-    return httpexceptions.HTTPFound(location=location)
+    return httpexceptions.HTTPFound(location=location, headers=auth_headers)
 
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')
