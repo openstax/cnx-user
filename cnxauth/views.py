@@ -92,7 +92,7 @@ def login_complete(request):
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):
-    id = request.multidict['id']
+    id = request.matchdict['id']
     try:
         user = usermodel.get_user(id)
     except usermodel.Rhaptos2Error:
@@ -102,7 +102,7 @@ def get_user(request):
 
 @view_config(route_name='post-user', request_method=['POST', 'PUT'])
 def post_user(request):
-    id = request.multidict.get('id', None)
+    id = request.matchdict.get('id', None)
     data = request.json_body
     if request.method == 'PUT' and id is None:
         raise httpexceptions.HttpBadRequest("PUT without an ID")
