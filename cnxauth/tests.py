@@ -8,10 +8,13 @@
 import os
 import unittest
 import json
+import socket
 import tempfile
+import uuid
 from urlparse import parse_qs, urlparse
 
 import transaction
+from webob.multidict import MultiDict
 from pyramid import testing
 
 from .models import DBSession
@@ -23,6 +26,14 @@ with open(os.path.join(test_data_directory, 'idents.json'), 'r') as fp:
     _TEST_IDENTS = json.load(fp)
 TEST_OPENID_IDENTS = _TEST_IDENTS['openid']
 TEST_GOOGLE_IDENTS = _TEST_IDENTS['google']
+
+
+def _resolve_test_domain(domain, port=80):
+    """Given a domain, resolve it down to it's FQDN and ip address."""
+    addrs = socket.getaddrinfo(domain, port)
+    addr = addrs[0][4][0]
+    fqdn = socket.gethostbyaddr(addr)[0]
+    return fqdn, addr
 
 
 class UidDiscoverTests(unittest.TestCase):
@@ -229,3 +240,48 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
         token_user_id, token_domain = token_value.split('%')
         self.assertEqual(token_domain, domain)
         self.assertEqual(int(token_user_id), user.id)
+
+    def test_backchannel_token_check(self):
+        # As a remote service, I want to check the validation token
+        #   that I was given by the visitor from the authentication
+        #   service is a valid request for service and I need it in
+        #   order to associate the visitor with a user profile in the
+        #   authenticate service.
+        # This case walks through a request from a remote service to
+        #   check if the given token is indeed valid. The goal here is
+        #   to verify and retrieve the user id from the authentication
+        #   service (this application).
+
+        # The 'anykeystore' package's sqlalchemy keystore does not
+        #   support a persistent connection, so we must use a file
+        #   based sqlite DB.
+        _db_file = tempfile.mkstemp('test.db')[-1]
+        self.addCleanup(os.remove, _db_file)
+
+        request = testing.DummyRequest()
+
+        # Make the request look as if it's coming from an remote service.
+        domain, ip_address = _resolve_test_domain('example.com')
+        request.remote_addr = ip_address
+
+        # Assign the sqla connection string for the key store lookup.
+        sql_connect_str = 'sqlite:///{}'.format(_db_file)
+        request.registry.settings['sqlalchemy.url'] = sql_connect_str
+
+        # Create the token entry.
+        from .views import get_token_store
+        token_storage = get_token_store()
+        token = str(uuid.uuid4())
+        user_id = 7654
+        token_storage.store(token, "{}%{}".format(user_id, domain))
+
+        # Put the token in the request as a POST value.
+        request.POST = MultiDict()
+        request.POST['token'] = token
+        request.params = request.POST
+
+        from .views import check
+        with transaction.manager:
+            resp = check(request)
+
+        self.assertEqual(resp, str(user_id))
