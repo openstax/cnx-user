@@ -8,8 +8,10 @@
 import os
 import unittest
 import json
-import transaction
+import tempfile
+from urlparse import parse_qs, urlparse
 
+import transaction
 from pyramid import testing
 
 from .models import DBSession
@@ -140,7 +142,7 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
         testing.tearDown()
 
     def test_first_local_visit(self):
-        # As first time visitor, I'd like to register and then edit my
+        # As a first time visitor, I'd like to register and then edit my
         #   profile, because I'd like to have this this service with
         #   other CNX services.
         # This case illustrates a first time visitor that is directly
@@ -168,3 +170,62 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
         self.assertEqual(request.route_url('www-get-user', id=user.id),
                          resp.location)
         self.assertEqual(302, resp.status_int)
+
+    def test_first_remote_visit(self):
+        # As a first time visitor coming from a remote service, I want
+        #   to login and be returned to the service I started from.
+        # This case illustrates a first time visitor that is coming
+        #   from a remote service. The goal here is to authenticate
+        #   the visitor and provide them with a token in the redirect
+        #   back to the remote service.
+
+        # The 'anykeystore' package's sqlalchemy keystore does not
+        #   support a persistent connection, so we must use a file
+        #   based sqlite DB.
+        _db_file = tempfile.mkstemp('test.db')[-1]
+        self.addCleanup(os.remove, _db_file)
+
+        request = testing.DummyRequest()
+        sql_connect_str = 'sqlite:///{}'.format(_db_file)
+        request.registry.settings['sqlalchemy.url'] = sql_connect_str
+        # Attach a token to the request, which would have happened at
+        #   login through the event hooks I put in velruse.
+        domain = 'example.com'
+        referrer = "http://{}:8080/foo/bar".format(domain)
+        request.referrer = referrer
+        from velruse.events import AfterLogin
+        from .views import capture_referrer
+        capture_referrer(AfterLogin(request))
+
+        # Create the request context.
+        from velruse import AuthenticationComplete
+        test_ident = TEST_OPENID_IDENTS[0]
+        request.context = AuthenticationComplete(**test_ident)
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual('http://michaelmulich.myopenid.com/',
+                         identity.identifier)
+
+        # Is the request a redirect to the service's 'valid' url?
+        self.assertEqual(302, resp.status_int)
+        expected_location = 'https://{}/valid'.format(domain)
+        self.assertTrue(resp.location.find(expected_location) >= 0)
+
+        # Verify the token has the correct information.
+        parsed_location = urlparse(resp.location)
+        parsed_token = parse_qs(parsed_location.query)['token'][0]
+        # Note that we aren't testing 'anykeystore' here so it's ok to use.
+        from .views import get_token_store
+        token_storage = get_token_store()
+        token_value = token_storage.retrieve(parsed_token)
+        token_user_id, token_domain = token_value.split('%')
+        self.assertEqual(token_domain, domain)
+        self.assertEqual(int(token_user_id), user.id)

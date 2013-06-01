@@ -80,6 +80,16 @@ def set_up_velruse(config):
     config.add_google_oauth2_login_from_settings()
 
 
+def set_up_service_exchange(config):
+    """Initializes and configures the parts of the application that handle
+    token creation and validation for external services using this user
+    profile and authentication hub.
+    """
+    # Part of the single sign-on design. This provides background
+    #   communication for the connecting service.
+    config.add_route('server-check', '/server/check')
+
+
 def main(global_config, **settings):
     """This function returns a Pyramid WSGI application."""
     engine = engine_from_config(settings, 'sqlalchemy.')
@@ -99,6 +109,7 @@ def main(global_config, **settings):
     config.include(register_bbb)
     config.include(register_api, route_prefix='/api')
     config.include(set_up_velruse)
+    config.incldue(set_up_service_exchange)
     config.include(register_www_iface)
     config.scan()
     return config.make_wsgi_app()

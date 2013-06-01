@@ -8,14 +8,20 @@
 import os
 import logging
 import json
+import uuid
+from urlparse import urlparse
 
+import anykeystore
 import velruse
 from pyramid import httpexceptions
+from pyramid.events import subscriber
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
 from pyramid.security import authenticated_userid, remember
+from pyramid.threadlocal import get_current_registry
 from pyramid.view import view_config
 from sqlalchemy.exc import DBAPIError
+from velruse.events import AfterLogin
 
 from .utils import discover_uid
 from .models import DBSession, User, Identity
@@ -24,6 +30,28 @@ from . import usermodel
 
 logger = logging.getLogger('cnxauth')
 here = os.path.abspath(os.path.dirname(__file__))
+
+
+def get_token_store():
+    """Retrieve the key store for the service exchange tokens."""
+    registry = get_current_registry()
+    # FIXME The keystore is hardcoded against our existing sqla url.
+    #       This should be a settings based connection utility lookup.
+    sqla_url = registry.settings['sqlalchemy.url']
+    token_storage = anykeystore.create_store('sqla', url=sqla_url)
+    return token_storage
+
+
+@subscriber(AfterLogin)
+def capture_referrer(event):
+    request = event.request
+    # Check for the referrer
+    if not request.referrer:
+        # Note, the following 'referer' is not miss-spelled.
+        raise HTTPServiceUnavailable("Missing HTTP Referer")
+    netloc = urlparse(event.request.referrer).netloc
+    service_domain = netloc.split(':', 1)[0]
+    request.session['referrer'] = service_domain
 
 
 @view_config(route_name='index')
@@ -111,9 +139,18 @@ def login_complete(request):
     # Remember the authenticated user for future requests.
     auth_headers = remember(request, user.id)
 
-    # TODO Check the session for endpoint redirection otherwise pop the
-    #      user over to their user profile /user/{id}
-    location = request.route_url('www-get-user', id=user.id)
+    # Check the session for endpoint redirection otherwise pop the
+    #   user over to their user profile /user/{id}
+    original_referrer = request.session.get('referrer')
+    if original_referrer is not None:
+        token = str(uuid.uuid4())
+        store = get_token_store()
+        value = "{}%{}".format(user.id, original_referrer)
+        store.store(token, value)  # XXX Never expires.
+        location = 'https://{}/valid?token={}'.format(
+            original_referrer, token)
+    else:
+        location = request.route_url('www-get-user', id=user.id)
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)
 
 
