@@ -13,11 +13,17 @@ This will require a 'Postgres' install. If you are using the
 ``cnxauth`` database for user ``cnxauth`` with the password
 ``cnxauth``.
 
+
 The application is build in Python and can be installed using the
 typical Python distribution installation procedure demonstrated
 below::
 
     $ python setup.py install
+
+*Important*: The application depends on a forked copy of ``velruse``
+at `pumazi/velruse #cnx-master
+<https://github.com/pumazi/velruse/tree/cnx-master>`_. This fork
+provides some bug fixes as well as event hooks.
 
 This will install the package and a few application specific
 scripts. One of these scripts is used to initialize the database with
