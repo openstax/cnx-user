@@ -109,7 +109,7 @@ def main(global_config, **settings):
     config.include(register_bbb)
     config.include(register_api, route_prefix='/api')
     config.include(set_up_velruse)
-    config.incldue(set_up_service_exchange)
+    config.include(set_up_service_exchange)
     config.include(register_www_iface)
     config.scan()
     return config.make_wsgi_app()
