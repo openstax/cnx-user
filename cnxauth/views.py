@@ -137,7 +137,7 @@ def login_complete(request):
                                                     content_type='text/plain',
                                                     )
     # Remember the authenticated user for future requests.
-    auth_headers = remember(request, user.id)
+    auth_headers = remember(request, str(user.id))
 
     # Check the session for endpoint redirection otherwise pop the
     #   user over to their user profile /user/{id}
