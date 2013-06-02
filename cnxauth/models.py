@@ -5,6 +5,7 @@
 # Public License version 3 (AGPLv3).
 # See LICENCE.txt for details.
 # ###
+import uuid
 from sqlalchemy import (
     or_,
     Table, Column, ForeignKey,
@@ -17,6 +18,8 @@ from sqlalchemy.orm import (
     )
 from zope.sqlalchemy import ZopeTransactionExtension
 
+from ._sqlalchemy import GUID
+
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
@@ -25,7 +28,7 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(GUID, default=uuid.uuid4, primary_key=True)
     firstname = Column(String)
     middlename = Column(String)
     lastname = Column(String)
@@ -58,7 +61,7 @@ class User(Base):
 class Identity(Base):
     __tablename__   = "identities"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(GUID, default=uuid.uuid4, primary_key=True)
 
     identifier = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=False)  # e.g. openid, google, mozilla, etc.
@@ -67,7 +70,7 @@ class Identity(Base):
     profile = Column(String)  # JSON profile data
     credentials = Column(String)  # JSON credential data (e.g. oauth token)
 
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(GUID, ForeignKey('users.id'))
     user = relationship('User', back_populates='identities')
 
     def __init__(self, ident_string, name, type,

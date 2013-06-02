@@ -239,7 +239,7 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
         token_value = token_storage.retrieve(parsed_token)
         token_user_id, token_domain = token_value.split('%')
         self.assertEqual(token_domain, domain)
-        self.assertEqual(int(token_user_id), user.id)
+        self.assertEqual(uuid.UUID(token_user_id), user.id)
 
     def test_backchannel_token_check(self):
         # As a remote service, I want to check the validation token
