@@ -24,6 +24,14 @@ from ._sqlalchemy import GUID
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
+def _json_serialize(value):
+    """Serializes special cases for known types that do not
+    naturally serialize."""
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    else:
+        return value
+
 
 class User(Base):
     __tablename__ = "users"
@@ -49,7 +57,8 @@ class User(Base):
                                        self.fullname, self.id)
 
     def __json__(self, request):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {c.name: _json_serialize(getattr(self, c.name))
+                for c in self.__table__.columns}
 
     @property
     def fullname(self):
@@ -87,4 +96,5 @@ class Identity(Base):
         return "<{} {}>".format(self.__class__.__name__, self.id)
 
     def __json__(self, request):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {c.name: _json_serialize(getattr(self, c.name))
+                for c in self.__table__.columns}
