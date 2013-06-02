@@ -8,6 +8,7 @@
 import os
 import logging
 import json
+import socket
 import uuid
 from urlparse import urlparse
 
@@ -152,6 +153,26 @@ def login_complete(request):
     else:
         location = request.route_url('www-get-user', id=user.id)
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)
+
+
+@view_config(route_name='server-check', request_method=['GET', 'POST'])
+def check(request):
+    """Check the token given to the external service by the user is
+    a valid token."""
+    # Pull the token out of the request.
+    token = request.params['token']
+    remote = socket.getfqdn(request.remote_addr)
+    store = get_token_store()
+
+    try:
+        # FYI expiration of the token/key is checked on retrieval.
+        value = store.retrieve(token)
+        user_id, domain = value.split('%')
+        # Check the token was given is valid for the external service domain.
+        assert domain == remote
+    except:
+        raise httpexceptions.HTTPBadRequest("Invalid Token")
+    return user_id
 
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')
