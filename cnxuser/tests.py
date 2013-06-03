@@ -197,6 +197,7 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
         self.addCleanup(os.remove, _db_file)
 
         request = testing.DummyRequest()
+        request.server_name = 'localhost'
         sql_connect_str = 'sqlite:///{}'.format(_db_file)
         request.registry.settings['sqlalchemy.url'] = sql_connect_str
         # Attach a token to the request, which would have happened at
@@ -205,8 +206,10 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
         referrer = "http://{}:8080/foo/bar".format(domain)
         request.referrer = referrer
         from velruse.events import AfterLogin
-        from .views import capture_referrer
-        capture_referrer(AfterLogin(request))
+        from .views import capture_requesting_service
+        # Note, this causes the test to ping the network using
+        #   the 'socket' library.
+        capture_requesting_service(AfterLogin(request))
 
         # Create the request context.
         from velruse import AuthenticationComplete

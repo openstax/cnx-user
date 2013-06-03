@@ -31,6 +31,7 @@ from . import usermodel
 
 logger = logging.getLogger('cnxauth')
 here = os.path.abspath(os.path.dirname(__file__))
+REFERRER_SESSION_KEY = 'login_info'
 
 
 def get_token_store():
@@ -44,15 +45,40 @@ def get_token_store():
 
 
 @subscriber(AfterLogin)
-def capture_referrer(event):
+def capture_requesting_service(event):
     request = event.request
-    # Check for the referrer
-    if not request.referrer:
+
+    def parse_service_domain(url):
+        netloc = urlparse(event.request.referrer).netloc
+        return netloc.split(':', 1)[0]
+
+    # Capture the referrer either through the login POST data
+    #   or via the HTTP_REFERER environment variable.
+    came_from = request.params.get('came_from', None)
+    if came_from is not None:
+        service_domain = parse_service_domain(came_from)
+    elif request.referrer is not None:
+        came_from = request.referrer
+        service_domain = parse_service_domain(came_from)
+    else:
         # Note, the following 'referer' is not miss-spelled.
         raise HTTPServiceUnavailable("Missing HTTP Referer")
-    netloc = urlparse(event.request.referrer).netloc
-    service_domain = netloc.split(':', 1)[0]
-    request.session['referrer'] = service_domain
+
+    server_addr = socket.gethostbyname(request.server_name)
+    referrer_addr = socket.gethostbyname(service_domain)
+
+    # Compare the referrer with the server host to see if they
+    #   are the same. If they are, then we do not capture the referrer
+    #   information, which would otherwise to used later by the login
+    #   completion view to supply a token for the remote service.
+    is_not_local_request = server_addr != referrer_addr
+    if is_not_local_request:
+        # TODO Clean this up in the denied login view, which at this point
+        #      does not exist.
+        request.session[REFERRER_SESSION_KEY] = {
+            'domain': service_domain,
+            'came_from': came_from,
+            }
 
 
 @view_config(route_name='index')
@@ -142,14 +168,14 @@ def login_complete(request):
 
     # Check the session for endpoint redirection otherwise pop the
     #   user over to their user profile /user/{id}
-    original_referrer = request.session.get('referrer')
-    if original_referrer is not None:
+    referrer_info = request.session.get(REFERRER_SESSION_KEY)
+    if referrer_info is not None:
         token = str(uuid.uuid4())
         store = get_token_store()
-        value = "{}%{}".format(user.id, original_referrer)
+        value = "{}%{}".format(user.id, referrer_info['domain'])
         store.store(token, value)  # XXX Never expires.
         location = 'https://{}/valid?token={}'.format(
-            original_referrer, token)
+            referrer_info['domain'], token)
     else:
         location = request.route_url('www-get-user', id=user.id)
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)
