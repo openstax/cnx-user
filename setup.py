@@ -15,21 +15,23 @@ install_requires = (
     'zope.sqlalchemy',
     'psycopg2',
     )
+description = "Authentication and user profiling services for the " \
+              "Connexions system components"
 
 setup(
-    name='cnx-auth',
+    name='cnx-user',
     version='0.1',
     author='Connexions team',
     author_email='info@cnx.org',
     url="https://github.com/pumazi/cnx-auth",
     license='LICENSE.txt',
-    description="Authentication services for the Connexions components",
+    description=description,
     packages=find_packages(),
     install_requires=install_requires,
     entry_points="""\
     [paste.app_factory]
-    main = cnxauth:main
+    main = cnxuser:main
     [console_scripts]
-    initialize_cnx-auth_db = cnxauth.scripts.initializedb:main
+    initialize_cnx-user_db = cnxuser.scripts.initializedb:main
     """,
     )
