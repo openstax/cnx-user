@@ -195,27 +195,6 @@ def check(request):
     return user_id
 
 
-@view_config(route_name='get-user', request_method='GET', renderer='json')
-def get_user(request):
-    id = request.matchdict['user_id']
-    try:
-        user = DBSession.query(User).filter(User.id==id).first()
-    except DBAPIError:
-        raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
-                                                    content_type='text/plain',
-                                                    )
-    if user is None:
-        raise httpexceptions.HTTPNotFound()
-    return user
-
-
-@view_config(route_name='get-user-identities', request_method='GET',
-             renderer='json')
-def get_user_identities(request):
-    user = get_user(request)
-    return user.identities
-
-
 connection_error_message = """\
 Pyramid is having a problem using your SQL database.  The problem
 might be caused by one of the following things:
