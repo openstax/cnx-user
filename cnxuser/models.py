@@ -7,9 +7,8 @@
 # ###
 import uuid
 from sqlalchemy import (
-    or_,
-    Table, Column, ForeignKey,
-    Integer, String, Text, Enum,
+    Column, ForeignKey,
+    Integer, String,
     )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (
