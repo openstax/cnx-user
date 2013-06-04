@@ -67,6 +67,10 @@ def set_up_velruse(config):
         )
     config.set_session_factory(session_factory)
 
+    from ._velruse import IIdentityProviderRegistry, IdentityProviderRegistry
+    ipr = IdentityProviderRegistry()
+    config.registry.registerUtility(ipr, IIdentityProviderRegistry)
+
     # Most of these providers have loaders for settings. OpenID is one
     #   of them that doesn't. =/  Refactor later please. :)
     config.include('velruse.providers.openid')

@@ -26,11 +26,12 @@ from velruse.events import AfterLogin
 
 from .utils import discover_uid
 from .models import DBSession, User, Identity
-
+from ._velruse import IIdentityProviderRegistry
 
 logger = logging.getLogger('cnxauth')
 here = os.path.abspath(os.path.dirname(__file__))
 REFERRER_SESSION_KEY = 'referrer_info'
+
 
 @view_config(route_name='index')
 @view_config(route_name='catch-all')
@@ -41,33 +42,12 @@ def index(request):
 @view_config(route_name='identity-providers', renderer='json')
 def identity_providers(request):
     """Produces a data structure of identity providers."""
-    providers = [
-        # {id: <string>, name: <human-readable-name>,
-        #  location: <login-url>,
-        #  # optionally...
-        #  fields: {name: <name>, type: (text|hidden),
-        #           # necessary for hidden fields
-        #           value: <default-value>,
-        #           # useful for text fields
-        #           label: <text>,
-        #           placeholder: <text>,
-        #           },
-        #  autosubmit: (True|False),
-        #  },
-        {'id': 'openid', 'name': 'OpenID',
-         'location': velruse.login_url(request, 'openid'),
-         'fields': [{'type': 'text', 'name': 'openid_identifier',
-                     'label': "OpenID identifier string",
-                     'placeholder': 'http://me.example.com',
-                     },
-                    ],
-         'auto_submit': False,
-         },
-        {'id': 'google', 'name': 'Google',
-         'location': velruse.login_url(request, 'google'),
-         'auto_submit': True,
-         },
-        ]
+    registry = request.registry
+    providers = []
+    provider_registry = registry.getUtility(IIdentityProviderRegistry)
+    for provider in provider_registry.values():
+        provider['location'] = velruse.login_url(request, provider['id'])
+        providers.append(provider)
     return providers
 
 
