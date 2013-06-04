@@ -26,7 +26,6 @@ from velruse.events import AfterLogin
 
 from .utils import discover_uid
 from .models import DBSession, User, Identity
-from . import usermodel
 
 
 logger = logging.getLogger('cnxauth')
