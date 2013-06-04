@@ -26,7 +26,8 @@ from velruse.events import AfterLogin
 
 from .utils import discover_uid
 from .models import DBSession, User, Identity
-from ._velruse import IIdentityProviderRegistry
+from ._velruse import IActiveIdentityProviders
+
 
 logger = logging.getLogger('cnxauth')
 here = os.path.abspath(os.path.dirname(__file__))
@@ -42,13 +43,7 @@ def index(request):
 @view_config(route_name='identity-providers', renderer='json')
 def identity_providers(request):
     """Produces a data structure of identity providers."""
-    registry = request.registry
-    providers = []
-    provider_registry = registry.getUtility(IIdentityProviderRegistry)
-    for provider in provider_registry.values():
-        provider['location'] = velruse.login_url(request, provider['id'])
-        providers.append(provider)
-    return providers
+    return request.registry.getUtility(IActiveIdentityProviders)
 
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')

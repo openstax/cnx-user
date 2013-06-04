@@ -11,7 +11,10 @@ data sets for identity providers that allows the application to build
 necessary functions, forms and views around the identiy provider.
 """
 from collections import Mapping
-from zope.interface import implementer, Interface
+
+import velruse
+from zope.interface import implementer, Attribute, Interface
+from pyramid.threadlocal import get_current_request
 
 
 # {id: <string>, name: <human-readable-name>,
@@ -27,6 +30,49 @@ from zope.interface import implementer, Interface
 #  autosubmit: (True|False),
 #  },
 
+
+class IIdentityProvider(Interface):
+    """Contains information about an identity and special methods to get
+    other information about the identity."""
+
+    id = Attribute("identifier that matches with the ``velruse``.")
+    name = Attribute("Human readible name for the identity provider.")
+    location = Attribute("URL where the login sequence should begin and the"
+                         "field values should be submitted.")
+
+    fields = Attribute("A list of fields required by the identity provider.")
+    auto_submit = Attribute("Boolean value for determining if a form can be"
+                            "auto submitted. Usually not if user input"
+                            "is required.")
+
+
+class IActiveIdentityProviders(Interface):
+    """Utility that contains a sequence of active registered
+    identity providers."""
+
+
+@implementer(IIdentityProvider)
+class IdentityProvider:
+    """See IIdentityProvider"""
+
+    def __init__(self, id, name, fields=[], auto_submit=False):
+        self.id = id
+        self.name = name
+        self.fields = fields
+        self.auto_submit = auto_submit
+
+    @property
+    def location(self):
+        request = get_current_request()
+        return velruse.login_url(request, self.id)
+
+    def __json__(self, request):
+        return {'id': self.id, 'name': self.name,
+                'location': self.location,
+                'fields': self.fields, 'auto_submit': self.auto_submit,
+                }
+
+
 OPENID = {
     'id': 'openid', 'name': 'OpenID',
     'fields': [{'type': 'text', 'name': 'openid_identifier',
@@ -36,34 +82,10 @@ OPENID = {
                ],
     'auto_submit': False,
     }
+openid = IdentityProvider(**OPENID)
 
 GOOGLE = {
     'id': 'google', 'name': 'Google',
     'auto_submit': True,
     }
-
-_registered_identity_providers = {
-    'openid': OPENID,
-    'google': GOOGLE,
-    }
-
-
-class IIdentityProviderRegistry(Interface):
-    """Utility for poking at the registered identity providers'
-    information."""
-
-
-@implementer(IIdentityProviderRegistry)
-class IdentityProviderRegistry(Mapping):
-
-    def __getitem__(self, key):
-        global _registered_identity_providers
-        return _registered_identity_providers[key]
-
-    def __iter__(self):
-        global _registered_identity_providers
-        return iter(_registered_identity_providers)
-
-    def __len__(self):
-        global _registered_identity_providers
-        return len(_registered_identity_providers)
+google = IdentityProvider(**GOOGLE)

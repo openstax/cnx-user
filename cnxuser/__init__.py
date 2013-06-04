@@ -56,10 +56,9 @@ def set_up_velruse(config):
     """Initialize and configure Velruse as a plugin. See also:
     http://pythonhosted.org/velruse/usage.html#as-a-pyramid-plugin
     """
-    # XXX identity providers are currently hard coded. This needs to
-    #     be a settings value.
     # XXX After the initial implementation this needs to be revisited
-    #     for clarity.
+    #     for clarity. The velruse registration should closely reflect
+    #     pyramid style plugin registration.
     settings = config.registry.settings
 
     session_factory = UnencryptedCookieSessionFactoryConfig(
@@ -67,9 +66,13 @@ def set_up_velruse(config):
         )
     config.set_session_factory(session_factory)
 
-    from ._velruse import IIdentityProviderRegistry, IdentityProviderRegistry
-    ipr = IdentityProviderRegistry()
-    config.registry.registerUtility(ipr, IIdentityProviderRegistry)
+    from ._velruse import openid, google, IActiveIdentityProviders
+    # XXX identity providers are currently hard coded. This needs to
+    #     be a settings value.
+    providers = [openid, google]
+    config.registry.registerUtility(providers, IActiveIdentityProviders)
+    for provider in providers:
+        config.registry.registerUtility(provider, name=provider.id)
 
     # Most of these providers have loaders for settings. OpenID is one
     #   of them that doesn't. =/  Refactor later please. :)
