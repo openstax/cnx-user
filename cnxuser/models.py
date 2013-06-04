@@ -6,6 +6,7 @@
 # See LICENCE.txt for details.
 # ###
 import uuid
+from pyramid import security
 from sqlalchemy import (
     Column, ForeignKey,
     Integer, String,
@@ -58,6 +59,12 @@ class User(Base):
     def __json__(self, request):
         return {c.name: _json_serialize(getattr(self, c.name))
                 for c in self.__table__.columns}
+
+    @property
+    def __acl__(self):
+        return [(security.Allow, str(self.id), security.ALL_PERIMISSIONS),
+                security.DENY_ALL,
+                ]
 
     @property
     def fullname(self):

@@ -14,6 +14,7 @@ from urlparse import urlparse
 
 import anykeystore
 import velruse
+from pyramid import security
 from pyramid import httpexceptions
 from pyramid.events import subscriber
 from pyramid.response import Response
@@ -57,6 +58,10 @@ def get_user(request):
                                                     )
     if user is None:
         raise httpexceptions.HTTPNotFound()
+
+    permissable = security.has_permission('view', user, request)
+    if not isinstance(permissable, security.Allowed):
+        raise httpexceptions.HTTPForbidden()
     return user
 
 
@@ -64,6 +69,9 @@ def get_user(request):
              renderer='json')
 def get_user_identities(request):
     user = get_user(request)
+    # Since we are utilizing the another view to acquire the user object,
+    #   that view does permissions checking and will prevent any
+    #   unauthorized usage from moving forward.
     return user.identities
 
 
