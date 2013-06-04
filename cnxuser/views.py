@@ -31,7 +31,66 @@ from . import usermodel
 
 logger = logging.getLogger('cnxauth')
 here = os.path.abspath(os.path.dirname(__file__))
-REFERRER_SESSION_KEY = 'login_info'
+REFERRER_SESSION_KEY = 'referrer_info'
+
+@view_config(route_name='index')
+@view_config(route_name='catch-all')
+def index(request):
+    with open(os.path.join(here, 'assets', 'index.html'), 'r') as f:
+        return render_to_response('string', f.read())
+
+@view_config(route_name='identity-providers', renderer='json')
+def identity_providers(request):
+    """Produces a data structure of identity providers."""
+    providers = [
+        # {id: <string>, name: <human-readable-name>,
+        #  location: <login-url>,
+        #  # optionally...
+        #  fields: {name: <name>, type: (text|hidden),
+        #           # necessary for hidden fields
+        #           value: <default-value>,
+        #           # useful for text fields
+        #           label: <text>,
+        #           placeholder: <text>,
+        #           },
+        #  autosubmit: (True|False),
+        #  },
+        {'id': 'openid', 'name': 'OpenID',
+         'location': velruse.login_url(request, 'openid'),
+         'fields': [{'type': 'text', 'name': 'openid_identifier',
+                     'label': "OpenID identifier string",
+                     'placeholder': 'http://me.example.com',
+                     },
+                    ],
+         'auto_submit': False,
+         },
+        {'id': 'google', 'name': 'Google',
+         'location': velruse.login_url(request, 'google'),
+         'auto_submit': True,
+         },
+        ]
+    return providers
+
+
+@view_config(route_name='get-user', request_method='GET', renderer='json')
+def get_user(request):
+    id = request.matchdict['user_id']
+    try:
+        user = DBSession.query(User).filter(User.id==id).first()
+    except DBAPIError:
+        raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
+                                                    content_type='text/plain',
+                                                    )
+    if user is None:
+        raise httpexceptions.HTTPNotFound()
+    return user
+
+
+@view_config(route_name='get-user-identities', request_method='GET',
+             renderer='json')
+def get_user_identities(request):
+    user = get_user(request)
+    return user.identities
 
 
 def get_token_store():
@@ -79,45 +138,6 @@ def capture_requesting_service(event):
             'domain': service_domain,
             'came_from': came_from,
             }
-
-
-@view_config(route_name='index')
-@view_config(route_name='catch-all')
-def index(request):
-    with open(os.path.join(here, 'assets', 'index.html'), 'r') as f:
-        return render_to_response('string', f.read())
-
-@view_config(route_name='identity-providers', renderer='json')
-def identity_providers(request):
-    """Produces a data structure of identity providers."""
-    providers = [
-        # {id: <string>, name: <human-readable-name>,
-        #  location: <login-url>,
-        #  # optionally...
-        #  fields: {name: <name>, type: (text|hidden),
-        #           # necessary for hidden fields
-        #           value: <default-value>,
-        #           # useful for text fields
-        #           label: <text>,
-        #           placeholder: <text>,
-        #           },
-        #  autosubmit: (True|False),
-        #  },
-        {'id': 'openid', 'name': 'OpenID',
-         'location': velruse.login_url(request, 'openid'),
-         'fields': [{'type': 'text', 'name': 'openid_identifier',
-                     'label': "OpenID identifier string",
-                     'placeholder': 'http://me.example.com',
-                     },
-                    ],
-         'auto_submit': False,
-         },
-        {'id': 'google', 'name': 'Google',
-         'location': velruse.login_url(request, 'google'),
-         'auto_submit': True,
-         },
-        ]
-    return providers
 
 
 def acquire_user(request):
