@@ -11,13 +11,26 @@ define [
     el: '#registration-modal'
 
     initialize: () ->
+      if not @model then throw 'The identity provider modal must be instantiated with a model.'
+
       if not @el
         $('<div id="registration-modal">').appendTo($('body'))
         @setElement($('#registration-modal'))
 
+      @template = template(@model.toJSON())
+
     render: ->
-      @template = @template or template(@model.toJSON())
-      @$el.empty().append(@template)
-      @$el.find('.modal').modal('show')
+      @$el.html(@template)
+
+      if @model.get('auto_submit')
+        @autoSubmit()
+      else
+        @show()
 
       return @
+
+    show: () ->
+      @$el.find('.modal').modal('show')
+
+    autoSubmit: () ->
+      @$el.find('form').submit()
