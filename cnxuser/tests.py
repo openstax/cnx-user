@@ -135,6 +135,45 @@ class ModelRelationshipTests(unittest.TestCase):
             self.assertEqual(ident2.user, user)
 
 
+# TODO The parse_service_url function needs testing for:
+#      - full domain and port
+#      - domain without port
+
+
+class CaptureRequestingServiceTests(unittest.TestCase):
+    # Note, the 'capture_requesting_service' function will
+    #   ping the network using the 'socket' library.
+
+    def setUp(self):
+        self.config = testing.setUp(settings={})
+
+    def tearDown(self):
+        testing.tearDown()
+
+    def test_local_request_wo_referrer_o_came_from(self):
+        # Verify an error is raised with requests containing no
+        #   referential data (http referer or came_from post value).
+        request = testing.DummyRequest()
+        # A normal webob request would have these attributes, but they
+        #   may not have a value.
+        request.referer = request.referrer = None
+
+        from velruse.events import AfterLogin
+        from .views import capture_requesting_service
+        from pyramid.httpexceptions import HTTPBadRequest
+        with self.assertRaises(HTTPBadRequest):
+            capture_requesting_service(AfterLogin(request))
+
+    def test_local_request_w_referrer(self):
+        self.fail()
+
+    def test_local_request_w_came_from(self):
+        self.fail()
+
+    def test_local_request_w_local_service_enabled(self):
+        self.fail()
+
+
 class RegistrationAndLoginViewTests(unittest.TestCase):
 
     def setUp(self):

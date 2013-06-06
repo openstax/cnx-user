@@ -103,7 +103,7 @@ def capture_requesting_service(event):
         service_domain = parse_service_domain(came_from)
     else:
         # Note, the following 'referer' is not miss-spelled.
-        raise HTTPServiceUnavailable("Missing HTTP Referer")
+        raise httpexceptions.HTTPBadRequest("Missing HTTP Referer")
 
     server_addr = socket.gethostbyname(request.server_name)
     referrer_addr = socket.gethostbyname(service_domain)
