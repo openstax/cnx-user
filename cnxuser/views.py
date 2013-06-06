@@ -10,6 +10,7 @@ import logging
 import json
 import socket
 import uuid
+import urllib
 from urlparse import urlparse
 
 import anykeystore
@@ -196,8 +197,9 @@ def login_complete(request):
         store = get_token_store()
         value = "{}%{}".format(user.id, referrer_info['domain'])
         store.store(token, value)  # XXX Never expires.
-        location = 'https://{}/valid?token={}'.format(
-            referrer_info['domain'], token)
+        location = 'https://{}/valid?token={}&next={}'.format(
+            referrer_info['domain'], token,
+            urllib.quote_plus(referrer_info['came_from']))
     else:
         location = request.route_url('www-get-user', id=user.id)
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)

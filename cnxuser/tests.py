@@ -284,7 +284,8 @@ class LoginCompleteTests(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
         from sqlalchemy import create_engine
-        engine = create_engine('sqlite://')
+        sql_connect_str = 'sqlite://'
+        engine = create_engine(sql_connect_str)
         from .models import Base
         DBSession.configure(bind=engine)
         Base.metadata.create_all(engine)
@@ -292,6 +293,8 @@ class LoginCompleteTests(unittest.TestCase):
         #   followup urls.
         from . import register_www_iface
         register_www_iface(self.config)
+        # The token store needs access to our sql-url at runtime.
+        self.config.registry.settings['sqlalchemy.url'] = sql_connect_str
 
     def tearDown(self):
         DBSession.remove()
@@ -300,7 +303,8 @@ class LoginCompleteTests(unittest.TestCase):
     def _make_request(self):
         request = testing.DummyRequest()
         request.server_name = 'localhost'
-        request.server_port = 'port'
+        request.server_port = 8080
+        request.session = {}
         return request
 
     def _make_user(self):
@@ -366,9 +370,9 @@ class LoginCompleteTests(unittest.TestCase):
         identity = user.identities[0]
         self.assertEqual('http://michaelmulich.myopenid.com/',
                          identity.identifier)
+        self.assertEqual(302, resp.status_int)
         self.assertEqual(request.route_url('www-get-user', id=user.id),
                          resp.location)
-        self.assertEqual(302, resp.status_int)
 
     def test_local_login_w_existing_identity(self):
         # Case where the identity exists, therefore the user exists. This
@@ -388,14 +392,43 @@ class LoginCompleteTests(unittest.TestCase):
         user = DBSession.query(User).first()
         identity = user.identities[0]
         self.assertEqual(identity.identifier, identifier)
+        self.assertEqual(resp.status_int, 302)
         self.assertEqual(resp.location,
                          request.route_url('www-get-user', id=user.id))
-        self.assertEqual(resp.status_int, 302)
 
     def test_remote_login_w_new_identity(self):
         # Case for a completely new visitor logging into a remote service
         #   that is using cnx-user.
-        self.fail()
+        request = self._make_one()
+        domain = 'example.com'
+        port = 8080
+        came_from = "http://{}:{}/foo/bar".format(domain, port)
+        from .views import REFERRER_SESSION_KEY
+        request.session[REFERRER_SESSION_KEY] = {
+            'domain': domain,
+            'port': port,
+            'came_from': came_from,
+            }
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual(302, resp.status_int)
+        parsed_location = urlparse(resp.location)
+        self.assertEqual(parsed_location.scheme, 'https')
+        self.assertEqual(parsed_location.netloc, domain)
+        self.assertEqual(parsed_location.path, '/valid')
+        query = parse_qs(parsed_location.query)
+        # Note, it is not important to check the contents of the token here,
+        #   because this is something that should/does happen in another test.
+        self.assertIn('token', query)
+        self.assertEqual(query['next'][0], came_from)
 
     def test_remote_login_w_existing_identity(self):
         # Case where the identity exists, therefor the user exists. This
