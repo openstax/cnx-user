@@ -11,7 +11,7 @@ require.config
 
     # ## Core Libraries
     jquery: 'libs/jquery/jquery'
-    underscore: 'libs/underscore'
+    underscore: 'libs/lodash'
     backbone: 'libs/backbone/backbone'
 
     # Bootstrap Plugins
@@ -48,9 +48,6 @@ require.config
   shim:
 
     # ## Core Libraries
-    underscore:
-      exports: '_'
-
     backbone:
       deps: ['underscore', 'jquery']
       exports: 'Backbone'
