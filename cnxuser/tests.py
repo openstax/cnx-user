@@ -288,17 +288,48 @@ class LoginCompleteTests(unittest.TestCase):
         from .models import Base
         DBSession.configure(bind=engine)
         Base.metadata.create_all(engine)
-        # # The following is used to register the routes used by the view.
-        # from . import register_www_iface
-        # register_www_iface(self.config)
+        # Initialize the routes required by the view to generate
+        #   followup urls.
+        from . import register_www_iface
+        register_www_iface(self.config)
 
     def tearDown(self):
         DBSession.remove()
         testing.tearDown()
 
+    def _make_request(self):
+        request = testing.DummyRequest()
+        request.server_name = 'localhost'
+        request.server_port = 'port'
+        return request
+
+    def _make_one(self, ident=TEST_OPENID_IDENTS[0], request=None):
+        """Makes a contextual post login request."""
+        # Create the request context.
+        from velruse import AuthenticationComplete
+        if request is None:
+            request = self._make_request()
+        request.context = AuthenticationComplete(**ident)
+        return request
+
     def test_local_login_w_new_identity(self):
         # Case for a completely new visitor logging into cnx-user locally.
-        self.fail()
+        request = self._make_one()
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual('http://michaelmulich.myopenid.com/',
+                         identity.identifier)
+        self.assertEqual(request.route_url('www-get-user', id=user.id),
+                         resp.location)
+        self.assertEqual(302, resp.status_int)
 
     def test_local_login_w_existing_identity(self):
         # Case where the identity exists, therefore the user exists. This
@@ -333,36 +364,6 @@ class RegistrationAndLoginViewTests(unittest.TestCase):
     def tearDown(self):
         DBSession.remove()
         testing.tearDown()
-
-    def test_first_local_visit(self):
-        # As a first time visitor, I'd like to register and then edit my
-        #   profile, because I'd like to have this this service with
-        #   other CNX services.
-        # This case illustrates a first time visitor that is directly
-        #    interacting (not forwarded via another service) with the
-        #    service. This case not does deal with actually editing
-        #    the profile, but getting the visitor to a place where
-        #    they can edit the profile.
-        request = testing.DummyRequest()
-        # Create the request context.
-        from velruse import AuthenticationComplete
-        test_ident = TEST_OPENID_IDENTS[0]
-        request.context = AuthenticationComplete(**test_ident)
-
-        from .views import login_complete
-        with transaction.manager:
-            resp = login_complete(request)
-
-        # Since this is the first visitor and the database is empty,
-        #   the new user and identity are the only entries.
-        from .models import User, Identity
-        user = DBSession.query(User).first()
-        identity = user.identities[0]
-        self.assertEqual('http://michaelmulich.myopenid.com/',
-                         identity.identifier)
-        self.assertEqual(request.route_url('www-get-user', id=user.id),
-                         resp.location)
-        self.assertEqual(302, resp.status_int)
 
     def test_first_remote_visit(self):
         # As a first time visitor coming from a remote service, I want

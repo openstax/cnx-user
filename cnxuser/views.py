@@ -149,6 +149,14 @@ def acquire_user(request):
 
 @view_config(context='velruse.AuthenticationComplete')
 def login_complete(request):
+    """This view is hit after a visitor has successfully authenticated with
+    one of the registered identity providers.
+
+    The successfully authenticated visitor will be remembered (given a cookie)
+    and redirected either to their profile page or back to the remote service
+    the came from. See ``capture_requesting_service`` for details on the
+    information put into a remote service redirect.
+    """
     context = request.context
     identifier = discover_uid(context)
 
