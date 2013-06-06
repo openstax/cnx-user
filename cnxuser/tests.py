@@ -211,6 +211,49 @@ class CaptureRequestingServiceTests(unittest.TestCase):
         from .views import REFERRER_SESSION_KEY
         self.assertNotIn(REFERRER_SESSION_KEY, event.request.session)
 
+    def test_remote_request_w_referer(self):
+        # Verify that local requests pass through without capturing any
+        #   data.
+        event = self._make_event()
+
+        # Set the referring party info.
+        domain = 'example.com'
+        port = 8080
+        referrer = "http://{}:{}/foo/bar".format(domain, port)
+        event.request.referrer = referrer
+
+        from .views import capture_requesting_service
+        capture_requesting_service(event)
+
+        from .views import REFERRER_SESSION_KEY
+        self.assertIn(REFERRER_SESSION_KEY, event.request.session)
+        ref_info = event.request.session[REFERRER_SESSION_KEY]
+        self.assertEqual(ref_info['came_from'], referrer)
+        self.assertEqual(ref_info['domain'], domain)
+        self.assertEqual(ref_info['port'], port)
+
+    def test_remote_request_w_came_from(self):
+        # Verify that local requests pass through without capturing any
+        #   data.
+        event = self._make_event()
+
+        # Set the referring party info.
+        domain = 'example.com'
+        port = 8080
+        referrer = "http://{}:{}/foo/bar".format(domain, port)
+        event.request.POST = event.request.params = {}
+        event.request.params['came_from'] = referrer
+
+        from .views import capture_requesting_service
+        capture_requesting_service(event)
+
+        from .views import REFERRER_SESSION_KEY
+        self.assertIn(REFERRER_SESSION_KEY, event.request.session)
+        ref_info = event.request.session[REFERRER_SESSION_KEY]
+        self.assertEqual(ref_info['came_from'], referrer)
+        self.assertEqual(ref_info['domain'], domain)
+        self.assertEqual(ref_info['port'], port)
+
     def test_local_request_w_local_service_enabled(self):
         self.fail()
 
