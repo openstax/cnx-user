@@ -277,6 +277,46 @@ class CaptureRequestingServiceTests(unittest.TestCase):
         self.assertEqual(ref_info['port'], port)
 
 
+class LoginCompleteTests(unittest.TestCase):
+    # These tests assume the visitor has come to this service without any
+    #   previous session information (unauthentication).
+
+    def setUp(self):
+        self.config = testing.setUp()
+        from sqlalchemy import create_engine
+        engine = create_engine('sqlite://')
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+        # # The following is used to register the routes used by the view.
+        # from . import register_www_iface
+        # register_www_iface(self.config)
+
+    def tearDown(self):
+        DBSession.remove()
+        testing.tearDown()
+
+    def test_local_login_w_new_identity(self):
+        # Case for a completely new visitor logging into cnx-user locally.
+        self.fail()
+
+    def test_local_login_w_existing_identity(self):
+        # Case where the identity exists, therefore the user exists. This
+        #   is a case of reauthentication.
+        self.fail()
+
+    def test_remote_login_w_new_identity(self):
+        # Case for a completely new visitor logging into a remote service
+        #   that is using cnx-user.
+        self.fail()
+
+    def test_remote_login_w_existing_identity(self):
+        # Case where the identity exists, therefor the user exists. This
+        #   case will reauthenticate a user and send the back to the remote
+        #   service.
+        self.fail()
+
+
 class RegistrationAndLoginViewTests(unittest.TestCase):
 
     def setUp(self):
