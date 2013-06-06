@@ -150,25 +150,66 @@ class CaptureRequestingServiceTests(unittest.TestCase):
     def tearDown(self):
         testing.tearDown()
 
-    def test_local_request_wo_referrer_o_came_from(self):
-        # Verify an error is raised with requests containing no
-        #   referential data (http referer or came_from post value).
+    def _make_request(self):
         request = testing.DummyRequest()
+        request.server_name = 'localhost'
         # A normal webob request would have these attributes, but they
         #   may not have a value.
         request.referer = request.referrer = None
+        # The session factory normally creates the session for us, but
+        #   it is not setup in tests or on a dummy request.
+        request.session = {}
+        return request
 
+    def _make_event(self, request=None):
         from velruse.events import AfterLogin
+        if request is None:
+            request = self._make_request()
+        event = AfterLogin(request)
+        return event
+
+    def test_request_wo_referrer_o_came_from(self):
+        # Verify an error is raised with requests containing no
+        #   referential data (http referer or came_from post value).
+        event = self._make_event()
+
         from .views import capture_requesting_service
         from pyramid.httpexceptions import HTTPBadRequest
         with self.assertRaises(HTTPBadRequest):
-            capture_requesting_service(AfterLogin(request))
+            capture_requesting_service(event)
 
     def test_local_request_w_referrer(self):
-        self.fail()
+        # Verify that local requests pass through without capturing any
+        #   data.
+        event = self._make_event()
+
+        # Set the referring party info.
+        domain = 'localhost'
+        referrer = "http://{}:8080/foo/bar".format(domain)
+        event.request.referrer = referrer
+
+        from .views import capture_requesting_service
+        capture_requesting_service(event)
+
+        from .views import REFERRER_SESSION_KEY
+        self.assertNotIn(REFERRER_SESSION_KEY, event.request.session)
 
     def test_local_request_w_came_from(self):
-        self.fail()
+        # Verify that local requests pass through without capturing any
+        #   data.
+        event = self._make_event()
+
+        # Set the referring party info.
+        domain = 'localhost'
+        referrer = "http://{}:8080/foo/bar".format(domain)
+        event.request.POST = event.request.params = {}
+        event.request.params['came_from'] = referrer
+
+        from .views import capture_requesting_service
+        capture_requesting_service(event)
+
+        from .views import REFERRER_SESSION_KEY
+        self.assertNotIn(REFERRER_SESSION_KEY, event.request.session)
 
     def test_local_request_w_local_service_enabled(self):
         self.fail()
