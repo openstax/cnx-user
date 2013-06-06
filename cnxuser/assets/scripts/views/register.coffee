@@ -10,14 +10,15 @@ define [
 
     return BaseView.extend
       initialize: () ->
+        @template = template({providers: identityProviders.toJSON()})
+
         @listenTo(identityProviders, 'reset', @render)
 
       render: () ->
-        @template = template({providers: identityProviders.toJSON()})
         @$el.html(@template)
 
         return @
-      
+
       events:
         'click .register-control': 'register'
 

@@ -8,7 +8,7 @@ define [
 
     return BaseView.extend
       render: ->
-        @$el.html template
+        @$el.html(template)
         return @
 
       close: () ->
