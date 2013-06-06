@@ -5,4 +5,7 @@ define [
 
   return new (Backbone.Collection.extend
     url: '/api/identity-providers'
+    
+    initialize: () ->
+      @fetch()
   )()

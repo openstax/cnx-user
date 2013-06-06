@@ -7,4 +7,7 @@ define [
   return new (Backbone.Collection.extend
     url: User.urlRoot
     model: User
+    
+    initialize: () ->
+      @fetch()
   )()
