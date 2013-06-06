@@ -419,6 +419,8 @@ class LoginCompleteTests(unittest.TestCase):
         from .models import User, Identity
         user = DBSession.query(User).first()
         identity = user.identities[0]
+        identifier = 'http://michaelmulich.myopenid.com/'
+        self.assertEqual(identity.identifier, identifier)
         self.assertEqual(302, resp.status_int)
         parsed_location = urlparse(resp.location)
         self.assertEqual(parsed_location.scheme, 'https')
@@ -434,7 +436,39 @@ class LoginCompleteTests(unittest.TestCase):
         # Case where the identity exists, therefor the user exists. This
         #   case will reauthenticate a user and send the back to the remote
         #   service.
-        self.fail()
+        identifier = "http://philschatz.myopenid.com/"
+        identity_id, user_id = self._make_identity(
+            identifier, TEST_OPENID_IDENTS[1])
+        request = self._make_one(TEST_OPENID_IDENTS[1])
+        domain = 'example.com'
+        port = 8080
+        came_from = "http://{}:{}/foo/bar".format(domain, port)
+        from .views import REFERRER_SESSION_KEY
+        request.session[REFERRER_SESSION_KEY] = {
+            'domain': domain,
+            'port': port,
+            'came_from': came_from,
+            }
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual(identity.identifier, identifier)
+        self.assertEqual(302, resp.status_int)
+        parsed_location = urlparse(resp.location)
+        self.assertEqual(parsed_location.scheme, 'https')
+        self.assertEqual(parsed_location.netloc, domain)
+        self.assertEqual(parsed_location.path, '/valid')
+        query = parse_qs(parsed_location.query)
+        # Note, it is not important to check the contents of the token here,
+        #   because this is something that should/does happen in another test.
+        self.assertIn('token', query)
 
 
 class RegistrationAndLoginViewTests(unittest.TestCase):
