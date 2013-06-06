@@ -1,20 +1,20 @@
 <div class="modal hide fade">
-  <div class="modal-header">
-    <button type="button" class="close" data-dismiss="modal">&times;</button>
-    <h3>{{name}}</h3>
-  </div>
-  <div class="modal-body">
-    <form action="{{location}}" method="POST">
-    {{#each fields}}
-      {{#if label}}
-        <label for="field-{{@index}}">{{label}}</label>
-      {{/if}}
-      <input type="{{type}}" name="{{name}}" id="field-{{@index}}" value="{{value}}" placeholder="{{placeholder}}" />
-    {{/each}}
-    </form>
-  </div>
-  <div class="modal-footer">
-    <a id="cancel" data-bypass class="btn">Cancel</a>
-    <a id="submit" data-bypass class="btn btn-primary">Submit</a>
-  </div>
+  <form class="modal-form" action="{{location}}" method="POST">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal">&times;</button>
+      <h3>{{name}}</h3>
+    </div>
+    <div class="modal-body">
+      {{#each fields}}
+        {{#if label}}
+          <label for="field-{{@index}}">{{label}}</label>
+        {{/if}}
+        <input type="{{type}}" name="{{name}}" id="field-{{@index}}" value="{{value}}" placeholder="{{placeholder}}" />
+      {{/each}}
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn" data-dismiss="modal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+  </form>
 </div>

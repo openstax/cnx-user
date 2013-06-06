@@ -15,23 +15,9 @@ define [
         $('<div id="registration-modal">').appendTo($('body'))
         @setElement($('#registration-modal'))
 
-    events:
-      'click #submit': 'submit'
-      'click #cancel': 'cancel'
-
     render: ->
-      @template = template(@model.toJSON())
+      @template = @template or template(@model.toJSON())
       @$el.empty().append(@template)
       @$el.find('.modal').modal('show')
-      if @model?.autosubmit
-        @submit()
 
       return @
-
-    cancel: ->
-      @$el.find('.modal').modal('hide')
-      @close()
-
-    submit: ->
-      # Remember to hide the modal on submission failure.
-      @$('form').submit()
