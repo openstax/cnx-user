@@ -470,6 +470,48 @@ class LoginCompleteTests(unittest.TestCase):
         #   because this is something that should/does happen in another test.
         self.assertIn('token', query)
 
+    def test_remote_local_login_w_new_identity(self):
+        # Case where the identity/user exists and is being called by
+        #   a remote service that is running locally alongside the cnx-user
+        #   service.
+        # Case for a completely new visitor logging into a remote service
+        #   that is using cnx-user.
+        self.config.registry.settings['allow-local-services'] = True
+        request = self._make_one()
+        domain = 'localhost'
+        port = 8080
+        scheme = 'http'
+        came_from = "http://{}:{}/foo/bar".format(domain, port)
+        from .views import REFERRER_SESSION_KEY
+        request.session[REFERRER_SESSION_KEY] = {
+            'domain': domain,
+            'port': port,
+            'came_from': came_from,
+            }
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        identifier = 'http://michaelmulich.myopenid.com/'
+        self.assertEqual(identity.identifier, identifier)
+        self.assertEqual(302, resp.status_int)
+        parsed_location = urlparse(resp.location)
+        self.assertEqual(parsed_location.scheme, scheme)
+        self.assertEqual(parsed_location.netloc, '{}:{}'.format(domain, port))
+        self.assertEqual(parsed_location.path, '/valid')
+        query = parse_qs(parsed_location.query)
+        # Note, it is not important to check the contents of the token here,
+        #   because this is something that should/does happen in another test.
+        self.assertIn('token', query)
+        self.assertEqual(query['next'][0], came_from)
+
+
 
 class RegistrationAndLoginViewTests(unittest.TestCase):
 

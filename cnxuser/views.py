@@ -10,8 +10,8 @@ import logging
 import json
 import socket
 import uuid
-import urllib
-from urlparse import urlparse
+from urllib import urlencode
+from urlparse import urlparse, urlunparse
 
 import anykeystore
 import velruse
@@ -191,18 +191,27 @@ def login_complete(request):
 
     # Check the session for endpoint redirection otherwise pop the
     #   user over to their user profile /user/{id}
-    referrer_info = request.session.get(REFERRER_SESSION_KEY)
-    if referrer_info is not None:
+    if REFERRER_SESSION_KEY in request.session:
+        referrer_info = request.session.get(REFERRER_SESSION_KEY)
         token = str(uuid.uuid4())
         store = get_token_store()
         value = "{}%{}".format(user.id, referrer_info['domain'])
         store.store(token, value)  # XXX Never expires.
-        location = 'https://{}/valid?token={}&next={}'.format(
-            referrer_info['domain'], token,
-            urllib.quote_plus(referrer_info['came_from']))
+        location = generate_service_validation_url(referrer_info, token)
     else:
         location = request.route_url('www-get-user', id=user.id)
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)
+
+
+def generate_service_validation_url(referrer_info, token):
+    query_str = urlencode(dict(token=token, next=referrer_info['came_from']))
+    url_parts = ['https', referrer_info['domain'], '/valid', '', query_str, '']
+    if get_current_registry().settings.get('allow-local-services', False):
+        url_parts[0] = 'http'
+        url_parts[1] = '{}:{}'.format(referrer_info['domain'],
+                                      referrer_info['port'])
+    location = urlunparse(url_parts)
+    return location
 
 
 @view_config(route_name='server-check', request_method=['GET', 'POST'])
