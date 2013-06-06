@@ -2,16 +2,16 @@ define [
   'jquery'
   'underscore'
   'backbone'
-  'cs!models/user'
   'cs!views/base'
+  'cs!models/user'
   'hbs!templates/profile'
-], ($, _, Backbone, BaseView, template) ->
+], ($, _, Backbone, BaseView, User, template) ->
 
     return BaseView.extend
       initialize: (id) ->
         if !id then throw 'The profile view must be instantiated with a user ID.'
 
-        @model = new User({id: id})
+        @model = new User(id)
         @listenTo(@model, 'change', @render)
 
         @template = template(@model.toJSON())

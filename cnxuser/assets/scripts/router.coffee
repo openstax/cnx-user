@@ -25,5 +25,5 @@ define [
       appView.render('login')
 
     profile: (param) ->
-      appView.render('profile', param)
+      appView.render('profile', {id: param})
   )()

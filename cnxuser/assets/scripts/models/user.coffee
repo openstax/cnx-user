@@ -3,7 +3,7 @@ define [
   'backbone'
 ], (_, Backbone) ->
 
-  User = Backbone.Model.extend
+  return Backbone.Model.extend
     urlRoot: '/api/users'
     defaults:
       firstname: ''
@@ -12,4 +12,4 @@ define [
       email: ''
 
     initialize: () ->
-      @fetch({reset: true})
+      @fetch()
