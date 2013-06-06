@@ -255,7 +255,26 @@ class CaptureRequestingServiceTests(unittest.TestCase):
         self.assertEqual(ref_info['port'], port)
 
     def test_local_request_w_local_service_enabled(self):
-        self.fail()
+        # Verify that local requests pass through without capturing any
+        #   data.
+        self.config.registry.settings['allow-local-services'] = True
+        event = self._make_event()
+
+        # Set the referring party info.
+        domain = event.request.server_name = 'localhost'
+        port = event.request.server_port = 8080
+        referrer = "http://{}:{}/foo/bar".format(domain, port)
+        event.request.referrer = referrer
+
+        from .views import capture_requesting_service
+        capture_requesting_service(event)
+
+        from .views import REFERRER_SESSION_KEY
+        self.assertIn(REFERRER_SESSION_KEY, event.request.session)
+        ref_info = event.request.session[REFERRER_SESSION_KEY]
+        self.assertEqual(ref_info['came_from'], referrer)
+        self.assertEqual(ref_info['domain'], domain)
+        self.assertEqual(ref_info['port'], port)
 
 
 class RegistrationAndLoginViewTests(unittest.TestCase):

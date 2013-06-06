@@ -88,19 +88,30 @@ def get_token_store():
 @subscriber(AfterLogin)
 def capture_requesting_service(event):
     request = event.request
+    settings = request.registry.settings
 
-    def parse_service_domain(url):
-        netloc = urlparse(event.request.referrer).netloc
-        return netloc.split(':', 1)[0]
+    def parse_service_url(url):
+        parsed_url = urlparse(url)
+        netloc = parsed_url.netloc
+        if netloc.find(':') >= 1:  # smalled possible, one char
+            domain, port = netloc.split(':')
+        else:
+            domain = netloc
+            port = parsed_url.scheme == 'http' and 80 or 443
+        return domain, int(port)
+
+    # Are local services enabled? This allows services running in the same
+    #   address space to look remote.
+    local_services_enabled = settings.get('allow-local-services', False)
 
     # Capture the referrer either through the login POST data
     #   or via the HTTP_REFERER environment variable.
     came_from = request.params.get('came_from', None)
     if came_from is not None:
-        service_domain = parse_service_domain(came_from)
+        service_domain, service_port = parse_service_url(came_from)
     elif request.referrer is not None:
         came_from = request.referrer
-        service_domain = parse_service_domain(came_from)
+        service_domain, service_port = parse_service_url(came_from)
     else:
         # Note, the following 'referer' is not miss-spelled.
         raise httpexceptions.HTTPBadRequest("Missing HTTP Referer")
@@ -113,11 +124,12 @@ def capture_requesting_service(event):
     #   information, which would otherwise to used later by the login
     #   completion view to supply a token for the remote service.
     is_not_local_request = server_addr != referrer_addr
-    if is_not_local_request:
+    if is_not_local_request or local_services_enabled:
         # TODO Clean this up in the denied login view, which at this point
         #      does not exist.
         request.session[REFERRER_SESSION_KEY] = {
             'domain': service_domain,
+            'port': service_port,
             'came_from': came_from,
             }
 
