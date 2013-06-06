@@ -303,6 +303,45 @@ class LoginCompleteTests(unittest.TestCase):
         request.server_port = 'port'
         return request
 
+    def _make_user(self):
+        """Creates a user entry in the database."""
+        from .models import User
+        with transaction.manager:
+            user = User()
+            DBSession.add(user)
+            DBSession.flush()
+            user_id = user.id
+        return user_id
+
+    def _make_identity(self, identifier=None, ident=TEST_OPENID_IDENTS[0],
+                       user_id=None):
+        """Creates an identity and user entry in the database."""
+        if identifier is None:
+            # Attempt to grab it from the 'ident' value, but this isn't
+            #   foolproof.
+            try:
+                identifier = ident['profile']['accounts'][0]['username']
+            except:
+                raise RuntimeError("Yeah, you're going to need to be "
+                                   "more specific.")
+        if user_id is None:
+            user_id = self._make_user()
+
+        from .models import Identity
+        with transaction.manager:
+            identity = Identity(identifier,
+                                ident['provider_name'],
+                                ident['provider_type'],
+                                json.dumps(ident['profile']),
+                                json.dumps(ident['credentials']),
+                                )
+            identity.user_id = user_id
+            DBSession.add(identity)
+            DBSession.flush()
+            identity_id = identity.id
+
+        return identity_id, user_id
+
     def _make_one(self, ident=TEST_OPENID_IDENTS[0], request=None):
         """Makes a contextual post login request."""
         # Create the request context.
@@ -334,7 +373,24 @@ class LoginCompleteTests(unittest.TestCase):
     def test_local_login_w_existing_identity(self):
         # Case where the identity exists, therefore the user exists. This
         #   is a case of reauthentication.
-        self.fail()
+        identifier = "http://philschatz.myopenid.com/"
+        identity_id, user_id = self._make_identity(
+            identifier, TEST_OPENID_IDENTS[1])
+        request = self._make_one(TEST_OPENID_IDENTS[1])
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual(identity.identifier, identifier)
+        self.assertEqual(resp.location,
+                         request.route_url('www-get-user', id=user.id))
+        self.assertEqual(resp.status_int, 302)
 
     def test_remote_login_w_new_identity(self):
         # Case for a completely new visitor logging into a remote service
