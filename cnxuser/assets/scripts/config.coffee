@@ -79,6 +79,6 @@ require.config
       return "cs!../templates/helpers/#{name}"
     templateExtension: 'html'
 
-# # Load and run the application
-define ['cs!app'], (app) ->
-  app
+# # Load the application
+define ['cs!loader'], (Loader) ->
+  Loader.initialize()
