@@ -101,10 +101,6 @@ def capture_requesting_service(event):
             port = parsed_url.scheme == 'http' and 80 or 443
         return domain, int(port)
 
-    # Are local services enabled? This allows services running in the same
-    #   address space to look remote.
-    local_services_enabled = settings.get('allow-local-services', False)
-
     # Capture the referrer either through the login POST data
     #   or via the HTTP_REFERER environment variable.
     came_from = request.params.get('came_from', None)
@@ -117,13 +113,15 @@ def capture_requesting_service(event):
         # Note, the following 'referer' is not miss-spelled.
         raise httpexceptions.HTTPBadRequest("Missing HTTP Referer")
 
-    server_addr = socket.gethostbyname(request.server_name)
-    referrer_addr = socket.gethostbyname(service_domain)
-
+    # Are local services enabled? This allows services running in the same
+    #   address space to look remote.
+    local_services_enabled = settings.get('allow-local-services', False)
     # Compare the referrer with the server host to see if they
     #   are the same. If they are, then we do not capture the referrer
-    #   information, which would otherwise to used later by the login
-    #   completion view to supply a token for the remote service.
+    #   information, except when the 'allow-local-service' setting
+    #   has been enabled.
+    server_addr = socket.gethostbyname(request.server_name)
+    referrer_addr = socket.gethostbyname(service_domain)
     is_not_local_request = server_addr != referrer_addr
     if is_not_local_request or local_services_enabled:
         # TODO Clean this up in the denied login view, which at this point
@@ -133,6 +131,7 @@ def capture_requesting_service(event):
             'port': service_port,
             'came_from': came_from,
             }
+    # Note, this is an event subscriber, nothing is directly returned.
 
 
 def acquire_user(request):
@@ -192,11 +191,13 @@ def login_complete(request):
     # Check the session for endpoint redirection otherwise pop the
     #   user over to their user profile /user/{id}
     if REFERRER_SESSION_KEY in request.session:
-        referrer_info = request.session.get(REFERRER_SESSION_KEY)
         token = str(uuid.uuid4())
         store = get_token_store()
-        value = "{}%{}".format(user.id, referrer_info['domain'])
+        value = user.id
         store.store(token, value)  # XXX Never expires.
+        # Send the user back to the service with the token and
+        #   information about where they came from.
+        referrer_info = request.session.get(REFERRER_SESSION_KEY)
         location = generate_service_validation_url(referrer_info, token)
     else:
         location = request.route_url('www-get-user', id=user.id)
@@ -214,25 +215,26 @@ def generate_service_validation_url(referrer_info, token):
     return location
 
 
-@view_config(route_name='server-check', request_method=['GET', 'POST'])
+@view_config(route_name='server-check', request_method=['GET', 'POST'],
+             renderer='json')
 def check(request):
     """Check the token given to the external service by the user is
     a valid token."""
     # Pull the token out of the request.
     token = request.params['token']
-    remote = socket.getfqdn(request.remote_addr)
     store = get_token_store()
 
     try:
-        # FYI expiration of the token/key is checked on retrieval.
-        value = store.retrieve(token)
-        user_id, domain = value.split('%')
-        # Check the token was given is valid for the external service domain.
-        assert domain == remote
-    except:
+        # FYI token expiration of the token/key is checked on retrieval.
+        user_id = store.retrieve(token)
+    except KeyError:
         raise httpexceptions.HTTPBadRequest("Invalid Token")
-    return user_id
-
+    except:
+        raise httpexceptions.HTTPInternalServerError("Problem connecting to "
+                                                     "the token storage.")
+    return {'id': user_id,
+            'url': request.route_url('get-user', user_id=user_id),
+            }
 
 connection_error_message = """\
 Pyramid is having a problem using your SQL database.  The problem

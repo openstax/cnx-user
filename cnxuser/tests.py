@@ -512,6 +512,58 @@ class LoginCompleteTests(unittest.TestCase):
         self.assertEqual(query['next'][0], came_from)
 
 
+class CheckTests(unittest.TestCase):
+    # These tests assume a remote (or local) service is communicating with
+    #   this service to verify the token it was given is valid.
+
+    def setUp(self):
+        self.config = testing.setUp()
+        from sqlalchemy import create_engine
+        engine = create_engine('sqlite://')
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+        # Initialize the routes required by the view to generate
+        #   followup urls.
+        from . import register_api
+        register_api(self.config)
+        # The token store needs access to our sql-url at runtime.
+        self._tmp_db_file = tempfile.mkstemp('test.db')[1]
+        sql_connect_str = 'sqlite:///{}'.format(self._tmp_db_file)
+        self.config.registry.settings['sqlalchemy.url'] = sql_connect_str
+
+    def tearDown(self):
+        os.remove(self._tmp_db_file)
+        DBSession.remove()
+        testing.tearDown()
+
+    def test_request(self):
+        # Check that a remote service (the indented usage) can make
+        #   a request to this service and retrieve the correct user id.
+        request = testing.DummyRequest()
+        request.server_name = 'localhost'
+
+        token = str(uuid.uuid4())
+        request.params = request.POST = request.GET = {'token': token}
+
+        from .views import get_token_store
+        token_store = get_token_store()
+        user_id = '1234-5678-90'
+        token_store.store(token, user_id)
+
+        from .views import check
+        data = check(request)
+
+        self.assertEqual(data['id'], user_id)
+        url = request.route_url('get-user', user_id=user_id)
+        self.assertEqual(data['url'], url)
+
+    def test_request_fails_on_domain_mismatch(self):
+        self.fail()
+
+    def test_fails_on_expired(self):
+        self.fail()
+
 
 class RegistrationAndLoginViewTests(unittest.TestCase):
 
