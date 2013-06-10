@@ -6,3 +6,8 @@
 .tox
 *.log
 *.*~
+
+# Build file #
+##############
+build/
+dist/
