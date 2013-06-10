@@ -558,8 +558,5 @@ class CheckTests(unittest.TestCase):
         url = request.route_url('get-user', user_id=user_id)
         self.assertEqual(data['url'], url)
 
-    def test_request_fails_on_domain_mismatch(self):
-        self.fail()
-
     def test_fails_on_expired(self):
         self.fail()
