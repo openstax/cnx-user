@@ -62,7 +62,7 @@ class User(Base):
 
     @property
     def __acl__(self):
-        return [(security.Allow, str(self.id), security.ALL_PERIMISSIONS),
+        return [(security.Allow, str(self.id), security.ALL_PERMISSIONS),
                 security.DENY_ALL,
                 ]
 
