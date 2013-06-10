@@ -232,7 +232,7 @@ def check(request):
     except:
         raise httpexceptions.HTTPInternalServerError("Problem connecting to "
                                                      "the token storage.")
-    return {'id': user_id,
+    return {'id': str(user_id),  # uuid.UUID to str for JSON rendering.
             'url': request.route_url('get-user', user_id=user_id),
             }
 
