@@ -559,4 +559,4 @@ class CheckTests(unittest.TestCase):
         self.assertEqual(data['url'], url)
 
     def test_fails_on_expired(self):
-        self.fail()
+        self.fail("Has not been implemented yet.")
