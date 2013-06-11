@@ -10,7 +10,8 @@ import logging
 import json
 import socket
 import uuid
-from urlparse import urlparse
+from urllib import urlencode
+from urlparse import urlparse, urlunparse
 
 import anykeystore
 import velruse
@@ -88,38 +89,49 @@ def get_token_store():
 @subscriber(AfterLogin)
 def capture_requesting_service(event):
     request = event.request
+    settings = request.registry.settings
 
-    def parse_service_domain(url):
-        netloc = urlparse(event.request.referrer).netloc
-        return netloc.split(':', 1)[0]
+    def parse_service_url(url):
+        parsed_url = urlparse(url)
+        netloc = parsed_url.netloc
+        if netloc.find(':') >= 1:  # smalled possible, one char
+            domain, port = netloc.split(':')
+        else:
+            domain = netloc
+            port = parsed_url.scheme == 'http' and 80 or 443
+        return domain, int(port)
 
     # Capture the referrer either through the login POST data
     #   or via the HTTP_REFERER environment variable.
     came_from = request.params.get('came_from', None)
     if came_from is not None:
-        service_domain = parse_service_domain(came_from)
+        service_domain, service_port = parse_service_url(came_from)
     elif request.referrer is not None:
         came_from = request.referrer
-        service_domain = parse_service_domain(came_from)
+        service_domain, service_port = parse_service_url(came_from)
     else:
         # Note, the following 'referer' is not miss-spelled.
-        raise HTTPServiceUnavailable("Missing HTTP Referer")
+        raise httpexceptions.HTTPBadRequest("Missing HTTP Referer")
 
-    server_addr = socket.gethostbyname(request.server_name)
-    referrer_addr = socket.gethostbyname(service_domain)
-
+    # Are local services enabled? This allows services running in the same
+    #   address space to look remote.
+    local_services_enabled = settings.get('allow-local-services', False)
     # Compare the referrer with the server host to see if they
     #   are the same. If they are, then we do not capture the referrer
-    #   information, which would otherwise to used later by the login
-    #   completion view to supply a token for the remote service.
+    #   information, except when the 'allow-local-service' setting
+    #   has been enabled.
+    server_addr = socket.gethostbyname(request.server_name)
+    referrer_addr = socket.gethostbyname(service_domain)
     is_not_local_request = server_addr != referrer_addr
-    if is_not_local_request:
+    if is_not_local_request or local_services_enabled:
         # TODO Clean this up in the denied login view, which at this point
         #      does not exist.
         request.session[REFERRER_SESSION_KEY] = {
             'domain': service_domain,
+            'port': service_port,
             'came_from': came_from,
             }
+    # Note, this is an event subscriber, nothing is directly returned.
 
 
 def acquire_user(request):
@@ -137,6 +149,14 @@ def acquire_user(request):
 
 @view_config(context='velruse.AuthenticationComplete')
 def login_complete(request):
+    """This view is hit after a visitor has successfully authenticated with
+    one of the registered identity providers.
+
+    The successfully authenticated visitor will be remembered (given a cookie)
+    and redirected either to their profile page or back to the remote service
+    the came from. See ``capture_requesting_service`` for details on the
+    information put into a remote service redirect.
+    """
     context = request.context
     identifier = discover_uid(context)
 
@@ -170,38 +190,51 @@ def login_complete(request):
 
     # Check the session for endpoint redirection otherwise pop the
     #   user over to their user profile /user/{id}
-    referrer_info = request.session.get(REFERRER_SESSION_KEY)
-    if referrer_info is not None:
+    if REFERRER_SESSION_KEY in request.session:
         token = str(uuid.uuid4())
         store = get_token_store()
-        value = "{}%{}".format(user.id, referrer_info['domain'])
+        value = user.id
         store.store(token, value)  # XXX Never expires.
-        location = 'https://{}/valid?token={}'.format(
-            referrer_info['domain'], token)
+        # Send the user back to the service with the token and
+        #   information about where they came from.
+        referrer_info = request.session.get(REFERRER_SESSION_KEY)
+        location = generate_service_validation_url(referrer_info, token)
     else:
         location = request.route_url('www-get-user', id=user.id)
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)
 
 
-@view_config(route_name='server-check', request_method=['GET', 'POST'])
+def generate_service_validation_url(referrer_info, token):
+    query_str = urlencode(dict(token=token, next=referrer_info['came_from']))
+    url_parts = ['https', referrer_info['domain'], '/valid', '', query_str, '']
+    if get_current_registry().settings.get('allow-local-services', False):
+        url_parts[0] = 'http'
+        url_parts[1] = '{}:{}'.format(referrer_info['domain'],
+                                      referrer_info['port'])
+    location = urlunparse(url_parts)
+    return location
+
+
+@view_config(route_name='server-check', request_method=['GET', 'POST'],
+             renderer='json')
 def check(request):
     """Check the token given to the external service by the user is
     a valid token."""
     # Pull the token out of the request.
     token = request.params['token']
-    remote = socket.getfqdn(request.remote_addr)
     store = get_token_store()
 
     try:
-        # FYI expiration of the token/key is checked on retrieval.
-        value = store.retrieve(token)
-        user_id, domain = value.split('%')
-        # Check the token was given is valid for the external service domain.
-        assert domain == remote
-    except:
+        # FYI token expiration of the token/key is checked on retrieval.
+        user_id = store.retrieve(token)
+    except KeyError:
         raise httpexceptions.HTTPBadRequest("Invalid Token")
-    return user_id
-
+    except:
+        raise httpexceptions.HTTPInternalServerError("Problem connecting to "
+                                                     "the token storage.")
+    return {'id': str(user_id),  # uuid.UUID to str for JSON rendering.
+            'url': request.route_url('get-user', user_id=user_id),
+            }
 
 connection_error_message = """\
 Pyramid is having a problem using your SQL database.  The problem
