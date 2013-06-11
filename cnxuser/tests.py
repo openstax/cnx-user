@@ -227,7 +227,44 @@ class IdentityDeletionTests(unittest.TestCase):
     def test_success(self):
         # Given a user with two or more connected identies remove one
         #   of the identies at the user's request.
-        self.fail()
+        # Create the user and connected identities.
+        from .models import Identity, User
+        with transaction.manager:
+            # Create the user first...
+            user = User()
+            DBSession.add(user)
+            DBSession.flush()
+            user_id = user.id
+        # It's easier to do this in two transactions to avoid unrealistic
+        #   flushing issues.
+        with transaction.manager:
+            # ...now create the connected identities.
+            identities = []
+            for name in ('Hao', 'Jone', 'Suse',):
+                identity = Identity(name, name, 'openid')
+                identity.user_id = str(user_id)
+                identities.append(identity)
+            DBSession.add_all(identities)
+            DBSession.flush()
+            identity_ids = [ident.id for ident in identities]
+
+        request = testing.DummyRequest()
+        removed_identity_id = identity_ids[0]
+        request.matchdict = {'user_id': user_id,
+                             'identity_id': removed_identity_id,
+                             }
+
+        from .views import delete_identity
+        delete_identity(request)  # No response, just a status code.
+
+        # Does the view tell us all went well?
+        self.assertEqual(request.response.status_code, 200)
+        # Did it really remove the identity?
+        with transaction.manager:
+            identity = DBSession.query(Identity) \
+                .filter(Identity.id==removed_identity_id) \
+                .first()
+            self.assertEqual(identity, None)
 
     def test_error_on_no_remaining_identities(self):
         # Given a user with only one connected identity, produce an error
