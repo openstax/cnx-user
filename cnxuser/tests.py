@@ -209,6 +209,35 @@ class PutUserTests(unittest.TestCase):
             self.assertEqual(user.fullname, '')
 
 
+class IdentityDeletionTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = testing.setUp(settings={})
+        from sqlalchemy import create_engine
+        sql_connect_str = 'sqlite://'
+        engine = create_engine(sql_connect_str)
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+
+    def tearDown(self):
+        DBSession.remove()
+        testing.tearDown()
+
+    def test_success(self):
+        # Given a user with two or more connected identies remove one
+        #   of the identies at the user's request.
+        self.fail()
+
+    def test_error_on_no_remaining_identities(self):
+        # Given a user with only one connected identity, produce an error
+        #   disabling the user from removing the only remaining identity.
+        # Note, that the we prevent this from happening server side, but
+        #   on the client side the user should be given the option to
+        #   completely remove the user account.
+        self.fail()
+
+
 # TODO The parse_service_url function needs testing for:
 #      - full domain and port
 #      - domain without port
