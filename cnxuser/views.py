@@ -89,7 +89,8 @@ def diffdict(original, modified):
         raise TypeError("Must be a dictionary")
 
 
-@view_config(route_name='put-user', request_method='PUT', renderer='json')
+@view_config(route_name='put-user', request_method=('PUT', 'PATCH',),
+             renderer='json')
 def put_user(request):
     user = get_user(request)
 
