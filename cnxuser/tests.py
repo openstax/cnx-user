@@ -135,6 +135,53 @@ class ModelRelationshipTests(unittest.TestCase):
             self.assertEqual(ident2.user, user)
 
 
+class PutUserTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = testing.setUp(settings={})
+        from sqlalchemy import create_engine
+        sql_connect_str = 'sqlite://'
+        engine = create_engine(sql_connect_str)
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+
+    def tearDown(self):
+        DBSession.remove()
+        testing.tearDown()
+
+    def test_success(self):
+        # Given a good set of data in the request, verify the request
+        #   goes through and the model is updated.
+        # Create a blank user.
+        from .models import User
+        with transaction.manager:
+            user = User()
+            DBSession.add(user)
+            DBSession.flush()
+            user_id = user.id
+        request = testing.DummyRequest()
+        request.matchdict = {'user_id': user_id}
+        data = request.json = request.json_body = {
+            'email': 'me@example.com',
+            'firstname': 'Smoo',
+            'lastname': 'Smoo',
+            }
+
+        from .views import put_user
+        with transaction.manager:
+            resp = put_user(request)
+
+        with transaction.manager:
+            user = DBSession.query(User).filter(User.id==user_id).one()
+            self.assertEqual(user.email, data['email'])
+            fullname = "{} {}".format(data['firstname'], data['lastname'])
+            self.assertEqual(user.fullname, fullname)
+
+    def test_invalid(self):
+        self.fail()
+
+
 # TODO The parse_service_url function needs testing for:
 #      - full domain and port
 #      - domain without port

@@ -27,7 +27,10 @@ from sqlalchemy.exc import DBAPIError
 from velruse.events import AfterLogin
 
 from .utils import discover_uid
-from .models import DBSession, User, Identity
+from .models import (
+    DBSession, User, Identity,
+    user_schema,
+    )
 from ._velruse import IActiveIdentityProviders
 
 
@@ -63,6 +66,44 @@ def get_user(request):
     permissable = security.has_permission('view', user, request)
     if not isinstance(permissable, security.Allowed):
         raise httpexceptions.HTTPForbidden()
+    return user
+
+
+def diffdict(original, modified):
+    if isinstance(original, dict) and isinstance(modified, dict):
+        changes = {}
+        for key, value in modified.iteritems():
+            if isinstance(value, dict):
+                inner_dict = diffdict(original[key], modified[key])
+                if inner_dict != {}:
+                    changes[key] = {}
+                    changes[key].update(inner_dict)
+            else:
+                if original.has_key(key):
+                    if value != original[key]:
+                        changes[key] = value
+                else:
+                    changes[key] = value
+        return changes
+    else:
+        raise TypeError("Must be a dictionary")
+
+
+@view_config(route_name='put-user', request_method='PUT', renderer='json')
+def put_user(request):
+    user = get_user(request)
+
+    # Does the user have write access?
+    permissable = security.has_permission('edit', user, request)
+    if not isinstance(permissable, security.Allowed):
+        raise httpexceptions.HTTPForbidden()
+
+    # Update the user data.
+    current_data = user_schema.dictify(user)
+    posted_data = user_schema.deserialize(request.json)
+    differences = diffdict(current_data, posted_data)
+    for key, value in differences.iteritems():
+        setattr(user, key, value)
     return user
 
 

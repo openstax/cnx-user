@@ -17,6 +17,7 @@ from sqlalchemy.orm import (
     relationship,
     )
 from zope.sqlalchemy import ZopeTransactionExtension
+from colanderalchemy import SQLAlchemySchemaNode
 
 from ._sqlalchemy import GUID
 
@@ -72,7 +73,6 @@ class User(Base):
         items = [n for n in items if n]
         return ' '.join(items)
 
-
 class Identity(Base):
     __tablename__   = "identities"
 
@@ -104,3 +104,6 @@ class Identity(Base):
     def __json__(self, request):
         return {c.name: _json_serialize(getattr(self, c.name))
                 for c in self.__table__.columns}
+
+
+user_schema = SQLAlchemySchemaNode(User, excludes=('id', 'identities',))

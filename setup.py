@@ -14,6 +14,7 @@ install_requires = (
     'SQLAlchemy',
     'zope.sqlalchemy',
     'psycopg2',
+    'colanderalchemy',
     )
 description = "Authentication and user profiling services for the " \
               "Connexions system components"
