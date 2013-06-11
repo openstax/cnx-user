@@ -170,7 +170,7 @@ class PutUserTests(unittest.TestCase):
 
         from .views import put_user
         with transaction.manager:
-            resp = put_user(request)
+            user = put_user(request)
 
         with transaction.manager:
             user = DBSession.query(User).filter(User.id==user_id).one()
@@ -179,7 +179,34 @@ class PutUserTests(unittest.TestCase):
             self.assertEqual(user.fullname, fullname)
 
     def test_invalid(self):
-        self.fail()
+        # Given a set of data that includes bogus data as well as fields
+        #   that are immuntable by the user, ignore them.
+        # We don't have anything in the schema fields that require
+        #   strict validation. So we'll ignore most problems.
+        from .models import User
+        with transaction.manager:
+            user = User()
+            DBSession.add(user)
+            DBSession.flush()
+            user_id = user.id
+        request = testing.DummyRequest()
+        request.matchdict = {'user_id': user_id}
+        data = request.json = request.json_body = {
+            'id': "select * from users where id='1234';",
+            'email': 'homestar@example.com',  # valid
+            'fullname': 'Smoo Smoo',
+            }
+
+        from .views import put_user
+        with transaction.manager:
+            user = put_user(request)
+            self.assertEqual(user.id, user_id)
+            self.assertEqual(user.fullname, '')
+
+        with transaction.manager:
+            user = DBSession.query(User).filter(User.id==user_id).one()
+            self.assertEqual(user.email, data['email'])
+            self.assertEqual(user.fullname, '')
 
 
 # TODO The parse_service_url function needs testing for:
