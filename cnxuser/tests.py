@@ -273,7 +273,35 @@ class IdentityDeletionTests(unittest.TestCase):
         # Note, that the we prevent this from happening server side, but
         #   on the client side the user should be given the option to
         #   completely remove the user account.
-        self.fail()
+        from .models import Identity, User
+        with transaction.manager:
+            # Create the user first...
+            user = User()
+            DBSession.add(user)
+            DBSession.flush()
+            user_id = user.id
+        # It's easier to do this in two transactions to avoid unrealistic
+        #   flushing issues.
+        with transaction.manager:
+            name = 'Hao'
+            identity = Identity(name, name, 'openid')
+            identity.user_id = str(user_id)
+            DBSession.add(identity)
+            DBSession.flush()
+            identity_id = identity.id
+
+        request = testing.DummyRequest()
+        removed_identity_id = identity_id
+        request.matchdict = {'user_id': user_id,
+                             'identity_id': removed_identity_id,
+                             }
+
+        from .views import delete_user_identity
+        from pyramid.httpexceptions import HTTPForbidden
+        with self.assertRaises(HTTPForbidden):
+            # Forbidden, you can't do this, ever.
+            delete_user_identity(request)
+        transaction.commit()
 
 
 # TODO The parse_service_url function needs testing for:
