@@ -118,6 +118,31 @@ def get_user_identities(request):
     return user.identities
 
 
+@view_config(route_name='delete-user-identity', request_method='DELETE')
+def delete_user_identity(request):
+    # Grab the identity
+    id = request.matchdict['identity_id']
+    try:
+        identity = DBSession.query(Identity) \
+            .filter(Identity.id==id) \
+            .first()
+    except DBAPIError:
+        raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
+                                                    content_type='text/plain',
+                                                    )
+    if identity is None:
+        raise httpexception.HTTPNotFound()
+
+    # Check that this user has permission to remove an identity.
+    permissable = security.has_permission('delete', identity, request)
+    if not isinstance(permissable, security.Allowed):
+        raise httpexception.HTTPForbidden()
+
+    # Remove the identity
+    DBSession.delete(identity)
+    raise httpexceptions.HTTPNoContent()
+
+
 def get_token_store():
     """Retrieve the key store for the service exchange tokens."""
     registry = get_current_registry()

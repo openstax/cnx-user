@@ -254,11 +254,12 @@ class IdentityDeletionTests(unittest.TestCase):
                              'identity_id': removed_identity_id,
                              }
 
-        from .views import delete_identity
-        delete_identity(request)  # No response, just a status code.
+        from .views import delete_user_identity
+        from pyramid.httpexceptions import HTTPNoContent
+        with self.assertRaises(HTTPNoContent):
+            delete_user_identity(request)
+        transaction.commit()
 
-        # Does the view tell us all went well?
-        self.assertEqual(request.response.status_code, 200)
         # Did it really remove the identity?
         with transaction.manager:
             identity = DBSession.query(Identity) \
