@@ -131,12 +131,14 @@ def delete_user_identity(request):
                                                     content_type='text/plain',
                                                     )
     if identity is None:
-        raise httpexception.HTTPNotFound()
-
+        raise httpexceptions.HTTPNotFound()
+    elif len(identity.user.identities) <= 1:
+        raise httpexceptions.HTTPForbidden("Cannot delete the only remaining "
+                                           "identity connection.")
     # Check that this user has permission to remove an identity.
     permissable = security.has_permission('delete', identity, request)
     if not isinstance(permissable, security.Allowed):
-        raise httpexception.HTTPForbidden()
+        raise httpexceptions.HTTPUnauthorized()
 
     # Remove the identity
     DBSession.delete(identity)
