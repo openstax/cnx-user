@@ -224,6 +224,18 @@ class IdentityDeletionTests(unittest.TestCase):
         DBSession.remove()
         testing.tearDown()
 
+    def test_not_found(self):
+        # Given an id for a non-existent identity, respond with a 404.
+        request = testing.DummyRequest()
+        request.matchdict = {'user_id': '1234',
+                             'identity_id': uuid.uuid4(),
+                             }
+
+        from .views import delete_user_identity
+        from pyramid.httpexceptions import HTTPNotFound
+        with self.assertRaises(HTTPNotFound):
+            delete_user_identity(request)
+
     def test_success(self):
         # Given a user with two or more connected identies remove one
         #   of the identies at the user's request.
