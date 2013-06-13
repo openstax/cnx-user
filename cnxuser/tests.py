@@ -246,6 +246,27 @@ class GetUsersTests(unittest.TestCase):
         self.assertEqual(len(users), len(expected_users))
         self.assertEqual(users[-1].email, expected_users[-1]['email'])
 
+    def test_multiple_terms(self):
+        # Case for general querying of users by more than one
+        #   search term.
+        request = testing.DummyRequest()
+        expected_user_one = TEST_USER_DATA[20]  # for email address
+        expected_user_two = TEST_USER_DATA[15]  # for lastname
+        expected_email_match = expected_user_one['email']
+        expected_name_match = expected_user_two['lastname']
+        terms = (expected_name_match, expected_email_match,)
+        query = ' '.join(terms)
+        request.params = request.GET = {'q': query}
+
+        from .views import get_users
+        users = get_users(request)
+
+        self.assertEqual(len(users), 2)
+        emails = [u.email for u in users]
+        self.assertIn(expected_email_match, emails)
+        lastnames = [u.lastname for u in users]
+        self.assertIn(expected_name_match, lastnames)
+
 
 class PutUserTests(unittest.TestCase):
 

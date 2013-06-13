@@ -59,14 +59,19 @@ def get_users(request):
     offset = request.params.get('page', 0) * limit
     query = request.params.get('q', None)
     is_a_query = query is not None
+    _tokenizer = lambda q: [t for t in q.split() if t]
 
     if is_a_query:
+        user_query = DBSession.query(User)
+        criteria = []
+        for term in _tokenizer(query):
+            term_set = (User.firstname.like('%{}%'.format(term)),
+                        User.lastname.like('%{}%'.format(term)),
+                        User.email==term,
+                        )
+            criteria.extend(term_set)
+        user_query = user_query.filter(or_(*criteria))
         try:
-            criteria = or_(User.firstname.like('%{}%'.format(query)),
-                           User.lastname.like('%{}%'.format(query)),
-                           User.email==query)
-            user_query = DBSession.query(User) \
-                .filter(criteria)
             users = user_query.order_by(User.lastname) \
                 .limit(limit).offset(offset) \
                 .all()
