@@ -267,6 +267,22 @@ class GetUsersTests(unittest.TestCase):
         lastnames = [u.lastname for u in users]
         self.assertIn(expected_name_match, lastnames)
 
+    def test_case_insensitive(self):
+        # Case for testing name searches with case insensitivity.
+        request = testing.DummyRequest()
+        expected_user = TEST_USER_DATA[15]  # for lastname
+        expected_match = expected_user['lastname']
+        query = expected_match.lower()
+        request.params = request.GET = {'q': query}
+
+        from .views import get_users
+        users = get_users(request)
+
+        # FIXME I'm thinking this should fail, but perhaps because
+        #       the test is working against sqlite, it may be playing dumb.
+        self.assertEqual(len(users), 1)
+        self.assertEqual(users[0].lastname, expected_match)
+
 
 class PutUserTests(unittest.TestCase):
 
