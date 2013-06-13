@@ -190,6 +190,7 @@ class GetUsersTests(unittest.TestCase):
         #   request parameter.
         request = testing.DummyRequest()
         request.params = request.GET = {'page': 1}
+
         from .views import get_users
         users = get_users(request)
 
@@ -204,6 +205,7 @@ class GetUsersTests(unittest.TestCase):
         #   limit request parameter.
         request = testing.DummyRequest()
         request.params = request.GET = {'limit': 20}
+
         from .views import get_users
         users = get_users(request)
 
@@ -214,18 +216,35 @@ class GetUsersTests(unittest.TestCase):
         self.assertEqual(users[19].id, self.user_ids[19])
 
     def test_query_on_email(self):
-        # Case for generally querying for users by name or email.
+        # Case for generally querying for users by email.
         #   Note, email matching checks for equality to prevent email
         #   harvesting through @domain queries.
         request = testing.DummyRequest()
         specific_user = TEST_USER_DATA[20]
         request.params = request.GET = {'q': specific_user['email']}
+
         from .views import get_users
         users = get_users(request)
 
         self.assertEqual(len(users), 1)
         user = users[0]
         self.assertEqual(user.firstname, specific_user['firstname'])
+
+    def test_query_by_name(self):
+        # Case for generally querying for users by name.
+        request = testing.DummyRequest()
+        query = 'ill'
+        _match = lambda s: s and s.find(query) >= 0 or False
+        _matcher = lambda u: _match(u['firstname']) or _match(u['lastname'])
+        expected_users = [u for u in TEST_USER_DATA if _matcher(u)]
+        expected_users = sorted(expected_users, key=lambda u: u['lastname'])
+        request.params = request.GET = {'q': query}
+
+        from .views import get_users
+        users = get_users(request)
+
+        self.assertEqual(len(users), len(expected_users))
+        self.assertEqual(users[-1].email, expected_users[-1]['email'])
 
 
 class PutUserTests(unittest.TestCase):

@@ -23,6 +23,7 @@ from pyramid.renderers import render_to_response
 from pyramid.security import authenticated_userid, remember
 from pyramid.threadlocal import get_current_registry
 from pyramid.view import view_config
+from sqlalchemy import or_
 from sqlalchemy.exc import DBAPIError
 from velruse.events import AfterLogin
 
@@ -58,14 +59,14 @@ def get_users(request):
     offset = request.params.get('page', 0) * limit
     query = request.params.get('q', None)
     is_a_query = query is not None
-    _tokenizer = lambda q: [t for t in q.split() if t]
 
     if is_a_query:
-        terms = _tokenizer(query)
         try:
-            user_query = DBSession.query(User)
-            for word in terms:
-                user_query = user_query.filter(User.email==query)
+            criteria = or_(User.firstname.like('%{}%'.format(query)),
+                           User.lastname.like('%{}%'.format(query)),
+                           User.email==query)
+            user_query = DBSession.query(User) \
+                .filter(criteria)
             users = user_query.order_by(User.lastname) \
                 .limit(limit).offset(offset) \
                 .all()
