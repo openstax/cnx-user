@@ -56,17 +56,35 @@ def identity_providers(request):
 def get_users(request):
     limit = request.params.get('limit', 10)
     offset = request.params.get('page', 0) * limit
+    query = request.params.get('q', None)
+    is_a_query = query is not None
+    _tokenizer = lambda q: [t for t in q.split() if t]
 
-    try:
-        users = DBSession.query(User) \
-            .order_by(User.lastname) \
-            .limit(limit).offset(offset) \
-            .all()
-    except DBAPIError:
-        raise httpexceptions.HTTPServiceUnavailable(
-                connection_error_message,
-                content_type='text/plain',
-                )
+    if is_a_query:
+        terms = _tokenizer(query)
+        try:
+            user_query = DBSession.query(User)
+            for word in terms:
+                user_query = user_query.filter(User.email==query)
+            users = user_query.order_by(User.lastname) \
+                .limit(limit).offset(offset) \
+                .all()
+        except DBAPIError:
+            raise httpexceptions.HTTPServiceUnavailable(
+                    connection_error_message,
+                    content_type='text/plain',
+                    )
+    else:
+        try:
+            users = DBSession.query(User) \
+                .order_by(User.lastname) \
+                .limit(limit).offset(offset) \
+                .all()
+        except DBAPIError:
+            raise httpexceptions.HTTPServiceUnavailable(
+                    connection_error_message,
+                    content_type='text/plain',
+                    )
     return users
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')

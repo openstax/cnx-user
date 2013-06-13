@@ -213,6 +213,20 @@ class GetUsersTests(unittest.TestCase):
         self.assertEqual(users[9].id, self.user_ids[9])
         self.assertEqual(users[19].id, self.user_ids[19])
 
+    def test_query_on_email(self):
+        # Case for generally querying for users by name or email.
+        #   Note, email matching checks for equality to prevent email
+        #   harvesting through @domain queries.
+        request = testing.DummyRequest()
+        specific_user = TEST_USER_DATA[20]
+        request.params = request.GET = {'q': specific_user['email']}
+        from .views import get_users
+        users = get_users(request)
+
+        self.assertEqual(len(users), 1)
+        user = users[0]
+        self.assertEqual(user.firstname, specific_user['firstname'])
+
 
 class PutUserTests(unittest.TestCase):
 
