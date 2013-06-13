@@ -45,11 +45,29 @@ def index(request):
     with open(os.path.join(here, 'assets', 'index.html'), 'r') as f:
         return render_to_response('string', f.read())
 
+
 @view_config(route_name='identity-providers', renderer='json')
 def identity_providers(request):
     """Produces a data structure of identity providers."""
     return request.registry.getUtility(IActiveIdentityProviders)
 
+
+@view_config(route_name='get-users', request_method='GET', renderer='json')
+def get_users(request):
+    limit = request.params.get('limit', 10)
+    offset = request.params.get('page', 0) * limit
+
+    try:
+        users = DBSession.query(User) \
+            .order_by(User.lastname) \
+            .limit(limit).offset(offset) \
+            .all()
+    except DBAPIError:
+        raise httpexceptions.HTTPServiceUnavailable(
+                connection_error_message,
+                content_type='text/plain',
+                )
+    return users
 
 @view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):

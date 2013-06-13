@@ -26,6 +26,8 @@ with open(os.path.join(test_data_directory, 'idents.json'), 'r') as fp:
     _TEST_IDENTS = json.load(fp)
 TEST_OPENID_IDENTS = _TEST_IDENTS['openid']
 TEST_GOOGLE_IDENTS = _TEST_IDENTS['google']
+with open(os.path.join(test_data_directory, 'users.json'), 'r') as fp:
+    TEST_USER_DATA = json.load(fp)
 
 
 def _resolve_test_domain(domain, port=80):
@@ -133,6 +135,83 @@ class ModelRelationshipTests(unittest.TestCase):
                 .one()
             self.assertIn(ident2, user.identities)
             self.assertEqual(ident2.user, user)
+
+
+class GetUsersTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = testing.setUp(settings={})
+        from sqlalchemy import create_engine
+        sql_connect_str = 'sqlite://'
+        engine = create_engine(sql_connect_str)
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+        self._initialize_users()
+
+    def tearDown(self):
+        DBSession.remove()
+        testing.tearDown()
+
+    def _initialize_users(self):
+        from .models import User
+        with transaction.manager:
+            users = []
+            for user_data in TEST_USER_DATA:
+                user = User()
+                for k, v in user_data.items():
+                    setattr(user, k, v)
+                DBSession.add(user)
+                users.append(user)
+            DBSession.flush()
+            # Sort the users by name for later reference in tests.
+            # We sort by name because that is what the view will
+            #   do by default.
+            users = sorted(users, key=lambda (u): u.lastname)
+            self.user_ids = [u.id for u in users]
+
+    def test_all(self):
+        # Case that tests the default behavior of the view. Get a list of
+        #   users without and specific criteria about which users to
+        #   retrieve. This case also tests for reasonable defaults.
+        request = testing.DummyRequest()
+
+        from .views import get_users
+        users = get_users(request)
+
+        self.assertEqual(len(users), 10)
+        # The testcase's users value have been presorted to make this easy.
+        self.assertEqual(users[0].id, self.user_ids[0])
+        self.assertEqual(users[6].id, self.user_ids[6])
+        self.assertEqual(users[9].id, self.user_ids[9])
+
+    def test_offset(self):
+        # Case for pagination of results through the use of the offset
+        #   request parameter.
+        request = testing.DummyRequest()
+        request.params = request.GET = {'page': 1}
+        from .views import get_users
+        users = get_users(request)
+
+        self.assertEqual(len(users), 10)
+        # The testcase's users value have been presorted to make this easy.
+        self.assertEqual(users[0].id, self.user_ids[10])
+        self.assertEqual(users[6].id, self.user_ids[16])
+        self.assertEqual(users[9].id, self.user_ids[19])
+
+    def test_limit(self):
+        # Case for limiting the results to a specified value using the
+        #   limit request parameter.
+        request = testing.DummyRequest()
+        request.params = request.GET = {'limit': 20}
+        from .views import get_users
+        users = get_users(request)
+
+        self.assertEqual(len(users), 20)
+        # The testcase's users value have been presorted to make this easy.
+        self.assertEqual(users[0].id, self.user_ids[0])
+        self.assertEqual(users[9].id, self.user_ids[9])
+        self.assertEqual(users[19].id, self.user_ids[19])
 
 
 class PutUserTests(unittest.TestCase):
