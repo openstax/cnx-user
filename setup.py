@@ -14,6 +14,7 @@ install_requires = (
     'SQLAlchemy',
     'zope.sqlalchemy',
     'psycopg2',
+    'colanderalchemy',
     )
 description = "Authentication and user profiling services for the " \
               "Connexions system components"
@@ -28,6 +29,7 @@ setup(
     description=description,
     packages=find_packages(),
     install_requires=install_requires,
+    include_package_data=True,
     entry_points="""\
     [paste.app_factory]
     main = cnxuser:main
