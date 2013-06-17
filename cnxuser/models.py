@@ -38,24 +38,29 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(GUID, default=uuid.uuid4, primary_key=True)
-    firstname = Column(String)
-    middlename = Column(String)
-    lastname = Column(String)
     email = Column(String)
+    firstname = Column(String)
+    othername = Column(String)
+    surname = Column(String)
+    fullname = Column(String)
+
+    title = Column(String)  # (a.k.a. honorific)
+    suffix = Column(String)  # (a.k.a. lineage)
+    website = Column(String)  # (a.k.a. homepage)
+
+    # BBB Legacy read-only field. This is used when automatically migrating
+    #     data and when doing legacy account recovery. This field should be
+    #     removed when the legacy system is shutdown.
+    _legacy_id = Column(String, unique=True)  # (a.k.a. personid)
 
     # A user can have many identities, but an identity can only be
     #   associated with one user.
     identities = relationship('Identity', back_populates='user')
 
-    def init(self):
-        self.firstname = ''
-        self.middlename = ''
-        self.lastname = ''
-        self.email = ''
-
     def __repr__(self):
+        fullname = self.fullname and self.fullname or self._fullname
         return "<{} '{}' - {}>".format(self.__class__.__name__,
-                                       self.fullname, self.id)
+                                       fullname, self.id)
 
     def __json__(self, request):
         return {c.name: _json_serialize(getattr(self, c.name))
@@ -68,10 +73,11 @@ class User(Base):
                 ]
 
     @property
-    def fullname(self):
-        items = [self.firstname, self.middlename, self.lastname]
+    def _fullname(self):
+        items = [self.firstname, self.othername, self.surname]
         items = [n for n in items if n]
-        return ' '.join(items)
+        return u' '.join(items)
+
 
 class Identity(Base):
     __tablename__   = "identities"
@@ -106,4 +112,5 @@ class Identity(Base):
                 for c in self.__table__.columns}
 
 
-user_schema = SQLAlchemySchemaNode(User, excludes=('id', 'identities',))
+USER_SCHEMA_EXCLUDES = ('id', 'identities', '_legacy_id',)
+user_schema = SQLAlchemySchemaNode(User, excludes=USER_SCHEMA_EXCLUDES)
