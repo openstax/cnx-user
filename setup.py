@@ -36,4 +36,5 @@ setup(
     [console_scripts]
     initialize_cnx-user_db = cnxuser.scripts.initializedb:main
     """,
+    test_suite='cnxuser.tests'
     )
