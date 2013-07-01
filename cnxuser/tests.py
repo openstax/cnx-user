@@ -109,14 +109,14 @@ class ModelRelationshipTests(unittest.TestCase):
 
     def test_user_to_ident_rel(self):
         firstname = "Jone"
-        lastname = "Hao"
+        surname = "Hao"
         jone_identifier = "https://jone.openid.example.com"
         hao_identifier = "https://hao.openid.example.com"
         from .models import User, Identity
         with transaction.manager:
             user = User()
             user.firstname = firstname
-            user.lastname = lastname
+            user.surname = surname
             DBSession.add(user)
             DBSession.flush()
             jone_ident = Identity(jone_identifier, '', '', user=user)
@@ -167,7 +167,7 @@ class GetUsersTests(unittest.TestCase):
             # Sort the users by name for later reference in tests.
             # We sort by name because that is what the view will
             #   do by default.
-            users = sorted(users, key=lambda (u): u.lastname)
+            users = sorted(users, key=lambda (u): u.surname)
             self.user_ids = [u.id for u in users]
 
     def test_all(self):
@@ -235,9 +235,9 @@ class GetUsersTests(unittest.TestCase):
         request = testing.DummyRequest()
         query = 'ill'
         _match = lambda s: s and s.find(query) >= 0 or False
-        _matcher = lambda u: _match(u['firstname']) or _match(u['lastname'])
+        _matcher = lambda u: _match(u['firstname']) or _match(u['surname'])
         expected_users = [u for u in TEST_USER_DATA if _matcher(u)]
-        expected_users = sorted(expected_users, key=lambda u: u['lastname'])
+        expected_users = sorted(expected_users, key=lambda u: u['surname'])
         request.params = request.GET = {'q': query}
 
         from .views import get_users
@@ -251,9 +251,9 @@ class GetUsersTests(unittest.TestCase):
         #   search term.
         request = testing.DummyRequest()
         expected_user_one = TEST_USER_DATA[20]  # for email address
-        expected_user_two = TEST_USER_DATA[15]  # for lastname
+        expected_user_two = TEST_USER_DATA[15]  # for surname
         expected_email_match = expected_user_one['email']
-        expected_name_match = expected_user_two['lastname']
+        expected_name_match = expected_user_two['surname']
         terms = (expected_name_match, expected_email_match,)
         query = ' '.join(terms)
         request.params = request.GET = {'q': query}
@@ -264,14 +264,14 @@ class GetUsersTests(unittest.TestCase):
         self.assertEqual(len(users), 2)
         emails = [u.email for u in users]
         self.assertIn(expected_email_match, emails)
-        lastnames = [u.lastname for u in users]
-        self.assertIn(expected_name_match, lastnames)
+        surnames = [u.surname for u in users]
+        self.assertIn(expected_name_match, surnames)
 
     def test_case_insensitive(self):
         # Case for testing name searches with case insensitivity.
         request = testing.DummyRequest()
-        expected_user = TEST_USER_DATA[15]  # for lastname
-        expected_match = expected_user['lastname']
+        expected_user = TEST_USER_DATA[15]  # for surname
+        expected_match = expected_user['surname']
         query = expected_match.lower()
         request.params = request.GET = {'q': query}
 
@@ -281,7 +281,7 @@ class GetUsersTests(unittest.TestCase):
         # FIXME I'm thinking this should fail, but perhaps because
         #       the test is working against sqlite, it may be playing dumb.
         self.assertEqual(len(users), 1)
-        self.assertEqual(users[0].lastname, expected_match)
+        self.assertEqual(users[0].surname, expected_match)
 
 
 class PutUserTests(unittest.TestCase):
@@ -314,7 +314,7 @@ class PutUserTests(unittest.TestCase):
         data = request.json = request.json_body = {
             'email': 'me@example.com',
             'firstname': 'Smoo',
-            'lastname': 'Smoo',
+            'surname': 'Smoo',
             }
 
         from .views import put_user
@@ -325,7 +325,7 @@ class PutUserTests(unittest.TestCase):
             user = DBSession.query(User).filter(User.id==user_id).one()
             self.assertEqual(user.email, data['email'])
             self.assertEqual(user.firstname, data['firstname'])
-            self.assertEqual(user.lastname, data['lastname'])
+            self.assertEqual(user.surname, data['surname'])
 
     def test_invalid(self):
         # Given a set of data that includes bogus data as well as fields
