@@ -324,8 +324,8 @@ class PutUserTests(unittest.TestCase):
         with transaction.manager:
             user = DBSession.query(User).filter(User.id==user_id).one()
             self.assertEqual(user.email, data['email'])
-            fullname = "{} {}".format(data['firstname'], data['lastname'])
-            self.assertEqual(user.fullname, fullname)
+            self.assertEqual(user.firstname, data['firstname'])
+            self.assertEqual(user.lastname, data['lastname'])
 
     def test_invalid(self):
         # Given a set of data that includes bogus data as well as fields
