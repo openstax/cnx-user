@@ -66,13 +66,13 @@ def get_users(request):
         criteria = []
         for term in _tokenizer(query):
             term_set = (User.firstname.like('%{}%'.format(term)),
-                        User.lastname.like('%{}%'.format(term)),
+                        User.surname.like('%{}%'.format(term)),
                         User.email==term,
                         )
             criteria.extend(term_set)
         user_query = user_query.filter(or_(*criteria))
         try:
-            users = user_query.order_by(User.lastname) \
+            users = user_query.order_by(User.surname) \
                 .limit(limit).offset(offset) \
                 .all()
         except DBAPIError:
@@ -83,7 +83,7 @@ def get_users(request):
     else:
         try:
             users = DBSession.query(User) \
-                .order_by(User.lastname) \
+                .order_by(User.surname) \
                 .limit(limit).offset(offset) \
                 .all()
         except DBAPIError:
