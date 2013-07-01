@@ -107,7 +107,7 @@ def get_user(request):
         raise httpexceptions.HTTPNotFound()
 
     permissable = security.has_permission('view', user, request)
-    if not isinstance(permissable, security.Allowed):
+    if not permissable:
         raise httpexceptions.HTTPForbidden()
     return user
 
@@ -119,7 +119,7 @@ def put_user(request):
 
     # Does the user have write access?
     permissable = security.has_permission('edit', user, request)
-    if not isinstance(permissable, security.Allowed):
+    if not permissable:
         raise httpexceptions.HTTPForbidden()
 
     # Update the user data.
@@ -160,7 +160,7 @@ def delete_user_identity(request):
                                            "identity connection.")
     # Check that this user has permission to remove an identity.
     permissable = security.has_permission('delete', identity, request)
-    if not isinstance(permissable, security.Allowed):
+    if not permissable:
         raise httpexceptions.HTTPUnauthorized()
 
     # Remove the identity
