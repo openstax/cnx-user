@@ -1,2 +1,3 @@
 include *.rst
 recursive-include cnxuser/test-data *.json
+recursive-include cnxuser/assets *
