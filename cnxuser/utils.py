@@ -7,7 +7,29 @@
 # ###
 
 
-__all__ = ('discover_uid',)
+__all__ = ('diffdict', 'discover_uid',)
+
+
+def diffdict(original, modified):
+    """Returns the differences between two dictionary values."""
+    if isinstance(original, dict) and isinstance(modified, dict):
+        changes = {}
+        for key, value in modified.iteritems():
+            if isinstance(value, dict):
+                inner_dict = diffdict(original[key], modified[key])
+                if inner_dict != {}:
+                    changes[key] = {}
+                    changes[key].update(inner_dict)
+            else:
+                if original.has_key(key):
+                    if value != original[key]:
+                        changes[key] = value
+                else:
+                    changes[key] = value
+        return changes
+    else:
+        raise TypeError("Must be a dictionary")
+
 
 def discover_uid(auth_complete):
     """Finds the prefered user name or id in

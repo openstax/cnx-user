@@ -27,7 +27,7 @@ from sqlalchemy import or_
 from sqlalchemy.exc import DBAPIError
 from velruse.events import AfterLogin
 
-from .utils import discover_uid
+from .utils import diffdict, discover_uid
 from .models import (
     DBSession, User, Identity,
     user_schema,
@@ -93,6 +93,7 @@ def get_users(request):
                     )
     return users
 
+
 @view_config(route_name='get-user', request_method='GET', renderer='json')
 def get_user(request):
     id = request.matchdict['user_id']
@@ -109,26 +110,6 @@ def get_user(request):
     if not isinstance(permissable, security.Allowed):
         raise httpexceptions.HTTPForbidden()
     return user
-
-
-def diffdict(original, modified):
-    if isinstance(original, dict) and isinstance(modified, dict):
-        changes = {}
-        for key, value in modified.iteritems():
-            if isinstance(value, dict):
-                inner_dict = diffdict(original[key], modified[key])
-                if inner_dict != {}:
-                    changes[key] = {}
-                    changes[key].update(inner_dict)
-            else:
-                if original.has_key(key):
-                    if value != original[key]:
-                        changes[key] = value
-                else:
-                    changes[key] = value
-        return changes
-    else:
-        raise TypeError("Must be a dictionary")
 
 
 @view_config(route_name='put-user', request_method=('PUT', 'PATCH',),
