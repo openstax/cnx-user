@@ -343,19 +343,19 @@ class PutUserTests(unittest.TestCase):
         data = request.json = request.json_body = {
             'id': "select * from users where id='1234';",
             'email': 'homestar@example.com',  # valid
-            'fullname': 'Smoo Smoo',
+            '_legacy_id': 'admin',
             }
 
         from .views import put_user
         with transaction.manager:
             user = put_user(request)
             self.assertEqual(user.id, user_id)
-            self.assertEqual(user.fullname, '')
+            self.assertEqual(user._legacy_id, None)
 
         with transaction.manager:
             user = DBSession.query(User).filter(User.id==user_id).one()
             self.assertEqual(user.email, data['email'])
-            self.assertEqual(user.fullname, '')
+            self.assertEqual(user._legacy_id, None)
 
 
 class IdentityDeletionTests(unittest.TestCase):
