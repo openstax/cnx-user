@@ -841,6 +841,29 @@ class LoginCompleteTests(unittest.TestCase):
         self.assertIn('token', query)
         self.assertEqual(query['next'][0], came_from)
 
+    def test_login_referrer_info_deletion_success(self):
+        # Case for successful login and the removal of the referrer information
+        #   in the session. This is put there during the login sequence.
+        self.config.registry.settings['allow-local-services'] = True
+        request = self._make_one()
+        domain = 'localhost'
+        port = 8080
+        scheme = 'http'
+        came_from = "http://{}:{}/foo/bar".format(domain, port)
+        from .views import REFERRER_SESSION_KEY
+        request.session[REFERRER_SESSION_KEY] = {
+            'domain': domain,
+            'port': port,
+            'came_from': came_from,
+            }
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Now check for removal.
+        self.assertNotIn(REFERRER_SESSION_KEY, request.session)
+
 
 class CheckTests(unittest.TestCase):
     # These tests assume a remote (or local) service is communicating with

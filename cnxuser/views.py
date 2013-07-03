@@ -291,6 +291,8 @@ def login_complete(request):
         #   information about where they came from.
         referrer_info = request.session.get(REFERRER_SESSION_KEY)
         location = generate_service_validation_url(referrer_info, token)
+        # Cleanup the referrer info now that it's no longer useful.
+        del request.session[REFERRER_SESSION_KEY]
     else:
         location = request.route_url('www-get-user', id=user.id)
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)
