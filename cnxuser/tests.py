@@ -607,6 +607,41 @@ class CaptureRequestingServiceTests(unittest.TestCase):
         self.assertEqual(ref_info['port'], port)
 
 
+class LazyLoginTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = testing.setUp()
+        from sqlalchemy import create_engine
+        sql_connect_str = 'sqlite://'
+        engine = create_engine(sql_connect_str)
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+        # Initialize the routes required by the view to generate
+        #   followup urls.
+        from . import register_www_iface
+        register_www_iface(self.config)
+
+    def tearDown(self):
+        DBSession.remove()
+        testing.tearDown()
+
+    def test_login_ok_w_authn_user(self):
+        # Case where the user is already authenticated. Just return them to
+        #   their place of origin.
+        self.fail()
+
+    def test_login_captures_referrer_info(self):
+        # Case to ensure the referrer info (used in post-login procedures)
+        #   has been set up.
+        self.fail()
+
+    def test_login_redirects_to_www_iface(self):
+        # Case to ensure this view is successful in redirecting the user to
+        #   cnx-user's web interface.
+        self.fail()
+
+
 class LoginCompleteTests(unittest.TestCase):
     # These tests assume the visitor has come to this service without any
     #   previous session information (unauthentication).
