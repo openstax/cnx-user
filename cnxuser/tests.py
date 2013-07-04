@@ -607,6 +607,94 @@ class CaptureRequestingServiceTests(unittest.TestCase):
         self.assertEqual(ref_info['port'], port)
 
 
+class LazyLoginTests(unittest.TestCase):
+
+    def setUp(self):
+        self.config = testing.setUp()
+        from sqlalchemy import create_engine
+        sql_connect_str = 'sqlite://'
+        engine = create_engine(sql_connect_str)
+        from .models import Base
+        DBSession.configure(bind=engine)
+        Base.metadata.create_all(engine)
+        # Initialize the routes required by the view to generate
+        #   followup urls.
+        from . import register_www_iface
+        register_www_iface(self.config)
+        # The token store needs access to our sql-url at runtime.
+        self.config.registry.settings['sqlalchemy.url'] = sql_connect_str
+
+    def tearDown(self):
+        DBSession.remove()
+        testing.tearDown()
+
+    def _make_request(self, referrer='http://example.com/'):
+        request = testing.DummyRequest()
+        request.server_name = 'localhost'
+        # A normal webob request would have these attributes, but they
+        #   may not have a value.
+        request.referer = request.referrer = referrer
+        # The session factory normally creates the session for us, but
+        #   it is not setup in tests or on a dummy request.
+        request.session = {}
+        return request
+
+    def test_login_ok_w_authn_user(self):
+        # Case where the user is already authenticated. Just return them to
+        #   their place of origin.
+        referrer = 'http://example.com/'
+        request = self._make_request(referrer)
+
+        # Fake an authenticated user.
+        _response_headers = [('X-Test', 'testing')]
+        self.config.testing_securitypolicy(userid='dummy-user',
+                                           remember_result=_response_headers)
+
+        from .views import lazy_login
+        from pyramid.httpexceptions import HTTPFound
+        with self.assertRaises(HTTPFound) as caught_exception:
+            lazy_login(request)
+        # Check that the user is being redirect back to the application
+        #   via the /valid interface.
+        response = caught_exception.exception
+        self.assertTrue(response.location.find('/valid') >= 0,
+                        response.location)
+        self.assertIn(_response_headers[0][1],
+                      response.headers[_response_headers[0][0]])
+
+    def test_login_captures_referrer_info(self):
+        # Case to ensure the referrer info (used in post-login procedures)
+        #   has been set up.
+        scheme, domain, port = 'http', 'example.com', 8080
+        referrer = '{}://{}:{}/'.format(scheme, domain, port)
+        request = self._make_request(referrer)
+
+        from .views import lazy_login
+        from pyramid.httpexceptions import HTTPFound
+        with self.assertRaises(HTTPFound):
+            lazy_login(request)
+        from .views import REFERRER_SESSION_KEY
+        info = request.session[REFERRER_SESSION_KEY]
+        self.assertEqual(info['domain'], domain)
+        self.assertEqual(info['port'], port)
+        self.assertEqual(info['came_from'], referrer)
+
+    def test_login_redirects_to_www_iface(self):
+        # Case to ensure this view is successful in redirecting the user to
+        #   cnx-user's web interface.
+        referrer = 'http://example.com/'
+        request = self._make_request(referrer)
+
+        from .views import lazy_login
+        from pyramid.httpexceptions import HTTPFound
+        with self.assertRaises(HTTPFound) as caught_exception:
+            lazy_login(request)
+        # Check that the user is being redirect back to the application
+        #   via the /valid interface.
+        response = caught_exception.exception
+        self.assertEqual(response.location, request.route_url('www-login'))
+
+
 class LoginCompleteTests(unittest.TestCase):
     # These tests assume the visitor has come to this service without any
     #   previous session information (unauthentication).

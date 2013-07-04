@@ -50,6 +50,7 @@ def register_www_iface(config):
     # These routes are deliberately placed after the catch-all route,
     #   because they are not wired to any on-server views. They are
     #   however wired into the client-side/front-end routes framework.
+    config.add_route('www-login', '/login')
     config.add_route('www-get-user', '/users/{id}')
 
 
@@ -74,6 +75,10 @@ def set_up_velruse(config):
     config.registry.registerUtility(providers, IActiveIdentityProviders)
     for provider in providers:
         config.registry.registerUtility(provider, name=provider.id)
+
+    # Register the lazy login view for use by external services to forward
+    #   users to authenticate (or verify authentication).
+    config.add_route('server-login', '/server/login')
 
     # Most of these providers have loaders for settings. OpenID is one
     #   of them that doesn't. =/  Refactor later please. :)
