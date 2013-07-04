@@ -76,6 +76,10 @@ def set_up_velruse(config):
     for provider in providers:
         config.registry.registerUtility(provider, name=provider.id)
 
+    # Register the lazy login view for use by external services to forward
+    #   users to authenticate (or verify authentication).
+    config.add_route('server-login', '/server/login')
+
     # Most of these providers have loaders for settings. OpenID is one
     #   of them that doesn't. =/  Refactor later please. :)
     config.include('velruse.providers.openid')
