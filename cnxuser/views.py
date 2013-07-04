@@ -179,8 +179,12 @@ def get_token_store():
 
 
 @subscriber(AfterLogin)
-def capture_requesting_service(event):
-    request = event.request
+def capture_requesting_service(event_or_request):
+    if isinstance(event_or_request, AfterLogin):
+        # 'tis and event
+        request = event_or_request.request
+    else:
+        request = event_or_request
     settings = request.registry.settings
 
     def parse_service_url(url):
@@ -223,7 +227,26 @@ def capture_requesting_service(event):
             'port': service_port,
             'came_from': came_from,
             }
-    # Note, this is an event subscriber, nothing is directly returned.
+    # Note, this is an event subscriber, therefore nothing is directly
+    #   returned.
+
+
+@view_config(route_name='server-login', request_method=['GET', 'POST'])
+def lazy_login(request):
+    """Provide a login interface for those services not wanting to do
+    the login logic in their application interface. It's important to
+    direct traffic to this route because it captures necessary information
+    that would otherwise be acquired via other api pieces."""
+    # Capture the requesting service info.
+    capture_requesting_service(request)
+
+    # Is the user already authenticated?
+    user_id = authenticated_userid(request)
+    if user_id is not None:
+        raise _login(request, user_id)
+
+    # Forward the user to the web interface.
+    raise httpexceptions.HTTPFound(location=request.route_url('www-login'))
 
 
 def acquire_user(request):
@@ -237,6 +260,32 @@ def acquire_user(request):
         user = User()
         DBSession.add(user)
     return user
+
+def _login(request, user_or_id):
+    """Given the request and user login and procedure to the valid location."""
+    if isinstance(user_or_id, User):
+        user_id = str(user_or_id.id)
+    else:
+        user_id = user_or_id
+    # Remember the authenticated user for future requests.
+    auth_headers = remember(request, user_id)
+
+    # Check the session for endpoint redirection otherwise pop the
+    #   user over to their user profile /user/{id}
+    if REFERRER_SESSION_KEY in request.session:
+        token = str(uuid.uuid4())
+        store = get_token_store()
+        value = user_id
+        store.store(token, value)  # XXX Never expires.
+        # Send the user back to the service with the token and
+        #   information about where they came from.
+        referrer_info = request.session.get(REFERRER_SESSION_KEY)
+        location = generate_service_validation_url(referrer_info, token)
+        # Cleanup the referrer info now that it's no longer useful.
+        del request.session[REFERRER_SESSION_KEY]
+    else:
+        location = request.route_url('www-get-user', id=user_id)
+    return httpexceptions.HTTPFound(location=location, headers=auth_headers)
 
 
 @view_config(context='velruse.AuthenticationComplete')
@@ -277,26 +326,7 @@ def login_complete(request):
         raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
                                                     content_type='text/plain',
                                                     )
-    # Remember the authenticated user for future requests.
-    auth_headers = remember(request, str(user.id))
-
-    # Check the session for endpoint redirection otherwise pop the
-    #   user over to their user profile /user/{id}
-    if REFERRER_SESSION_KEY in request.session:
-        token = str(uuid.uuid4())
-        store = get_token_store()
-        value = user.id
-        store.store(token, value)  # XXX Never expires.
-        # Send the user back to the service with the token and
-        #   information about where they came from.
-        referrer_info = request.session.get(REFERRER_SESSION_KEY)
-        location = generate_service_validation_url(referrer_info, token)
-        # Cleanup the referrer info now that it's no longer useful.
-        del request.session[REFERRER_SESSION_KEY]
-    else:
-        location = request.route_url('www-get-user', id=user.id)
-    return httpexceptions.HTTPFound(location=location, headers=auth_headers)
-
+    return _login(request, user)
 
 def generate_service_validation_url(referrer_info, token):
     query_str = urlencode(dict(token=token, next=referrer_info['came_from']))
