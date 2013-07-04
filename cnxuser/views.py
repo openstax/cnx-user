@@ -179,8 +179,12 @@ def get_token_store():
 
 
 @subscriber(AfterLogin)
-def capture_requesting_service(event):
-    request = event.request
+def capture_requesting_service(event_or_request):
+    if isinstance(event_or_request, AfterLogin):
+        # 'tis and event
+        request = event_or_request.request
+    else:
+        request = event_or_request
     settings = request.registry.settings
 
     def parse_service_url(url):
@@ -223,7 +227,21 @@ def capture_requesting_service(event):
             'port': service_port,
             'came_from': came_from,
             }
-    # Note, this is an event subscriber, nothing is directly returned.
+    # Note, this is an event subscriber, therefore nothing is directly
+    #   returned.
+
+
+@view_config(route_name='server-login', request_method=['GET', 'POST'])
+def lazy_login(request):
+    """Provide a login interface for those services not wanting to do
+    the login logic in their application interface. It's important to
+    direct traffic to this route because it captures necessary information
+    that would otherwise be acquired via other api pieces."""
+    # Capture the requesting service info.
+    capture_requesting_service(request)
+
+    # Forward the user to the web interface.
+    raise httpexceptions.HTTPFound(location=request.route_url('www-login'))
 
 
 def acquire_user(request):

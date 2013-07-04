@@ -50,6 +50,7 @@ def register_www_iface(config):
     # These routes are deliberately placed after the catch-all route,
     #   because they are not wired to any on-server views. They are
     #   however wired into the client-side/front-end routes framework.
+    config.add_route('www-login', '/login')
     config.add_route('www-get-user', '/users/{id}')
 
 
