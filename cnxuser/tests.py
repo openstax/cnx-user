@@ -621,6 +621,8 @@ class LazyLoginTests(unittest.TestCase):
         #   followup urls.
         from . import register_www_iface
         register_www_iface(self.config)
+        # The token store needs access to our sql-url at runtime.
+        self.config.registry.settings['sqlalchemy.url'] = sql_connect_str
 
     def tearDown(self):
         DBSession.remove()
@@ -640,7 +642,25 @@ class LazyLoginTests(unittest.TestCase):
     def test_login_ok_w_authn_user(self):
         # Case where the user is already authenticated. Just return them to
         #   their place of origin.
-        self.fail()
+        referrer = 'http://example.com/'
+        request = self._make_request(referrer)
+
+        # Fake an authenticated user.
+        _response_headers = [('X-Test', 'testing')]
+        self.config.testing_securitypolicy(userid='dummy-user',
+                                           remember_result=_response_headers)
+
+        from .views import lazy_login
+        from pyramid.httpexceptions import HTTPFound
+        with self.assertRaises(HTTPFound) as caught_exception:
+            lazy_login(request)
+        # Check that the user is being redirect back to the application
+        #   via the /valid interface.
+        response = caught_exception.exception
+        self.assertTrue(response.location.find('/valid') >= 0,
+                        response.location)
+        self.assertIn(_response_headers[0][1],
+                      response.headers[_response_headers[0][0]])
 
     def test_login_captures_referrer_info(self):
         # Case to ensure the referrer info (used in post-login procedures)
