@@ -187,6 +187,10 @@ def capture_requesting_service(event_or_request):
         request = event_or_request
     settings = request.registry.settings
 
+    # We may have already captured the referrer information...
+    if REFERRER_SESSION_KEY in request.session:
+        return
+
     def parse_service_url(url):
         parsed_url = urlparse(url)
         netloc = parsed_url.netloc
