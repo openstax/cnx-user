@@ -1,0 +1,42 @@
+{
+    "name": "cnx-user",
+    "version": "0.0.1",
+    "description": "Connexions user login and management portal",
+    "scripts": {
+        "prepublish": "grunt install --verbose",
+        "test": "grunt test --verbose",
+        "dist": "grunt dist --verbose"
+    },
+
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Connexions/cnx-user.git"
+    },
+
+    "dependencies": {
+        "grunt": "~0.4.1",
+        "grunt-shell": "~0.3.1",
+        "bower": "~1.0"
+    },
+
+    "devDependencies": {
+        "grunt-contrib-requirejs": "~0.4.1",
+        "rjs-build-analysis": "~0.0.3",
+        "grunt-contrib-clean": "~0.5",
+        "grunt-contrib-jshint": "~0.6",
+        "grunt-coffeelint": "~0.0.7",
+        "grunt-recess": "~0.3.3",
+        "grunt-jsbeautifier": "~0.1.10",
+        "grunt-contrib-uglify": "~0.2.2",
+        "grunt-contrib-imagemin": "~0.1.4"
+    },
+
+    "license": [{
+        "type": "AGPL",
+        "url": "https://github.com/Connexions/cnx-user/blob/master/LICENSE.txt"
+    }],
+
+    "engines": {
+        "node": ">=0.10"
+    }
+}
