@@ -6,6 +6,8 @@
 # See LICENCE.txt for details.
 # ###
 """Authentication and user profile web application"""
+import os
+
 from pyramid.config import Configurator
 from pyramid.static import static_view
 from pyramid.authentication import AuthTktAuthenticationPolicy
@@ -18,6 +20,9 @@ from .models import (
     DBSession,
     Base,
     )
+
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 
 def register_bbb(config):
@@ -42,11 +47,28 @@ def register_api(config):
 
 def register_www_iface(config):
     """Registers routes and assets for the web interface."""
-    config.add_static_view('scripts', 'assets/scripts', cache_max_age=0)
-    config.add_static_view('styles', 'assets/styles', cache_max_age=0)
-    config.add_static_view('templates', 'assets/templates', cache_max_age=0)
+    settings = config.registry.settings
+    compiled_assets_dir = settings.get('compiled-assets-dir', None)
+    if compiled_assets_dir is None:
+        config.add_static_view('scripts', 'assets/site/scripts',
+                               cache_max_age=0)
+        config.add_static_view('styles', 'assets/site/styles',
+                               cache_max_age=0)
+        config.add_static_view('templates', 'assets/site/templates',
+                               cache_max_age=0)
+        index_html = os.path.join(here, 'assets/site/index.html')
+    else:
+        config.add_static_view('scripts',
+                               os.path.join(compiled_assets_dir, 'scripts'),
+                               cache_max_age=604800)
+        index_html = os.path.join(compiled_assets_dir, 'index.html')
+
+    # Assign the index.html to a settings value to be looked up
+    #   in the index view.
+    settings['~index.html'] = index_html
     config.add_route('index', '/')
     config.add_route('catch-all', '/*path')
+
     # These routes are deliberately placed after the catch-all route,
     #   because they are not wired to any on-server views. They are
     #   however wired into the client-side/front-end routes framework.
