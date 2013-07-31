@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "description": "Connexions user login and management portal",
     "scripts": {
-        "prepublish": "grunt install --verbose",
+        "prepublish": "bower install",
         "test": "grunt test --verbose",
         "dist": "grunt dist --verbose"
     },
@@ -15,7 +15,6 @@
 
     "dependencies": {
         "grunt": "~0.4.1",
-        "grunt-shell": "~0.3.1",
         "bower": "~1.0"
     },
 
@@ -27,8 +26,7 @@
         "grunt-coffeelint": "~0.0.7",
         "grunt-recess": "~0.3.3",
         "grunt-jsbeautifier": "~0.1.10",
-        "grunt-contrib-uglify": "~0.2.2",
-        "grunt-contrib-imagemin": "~0.1.4"
+        "grunt-contrib-uglify": "~0.2.2"
     },
 
     "license": [{

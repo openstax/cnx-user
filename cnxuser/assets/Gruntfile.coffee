@@ -187,27 +187,6 @@ module.exports = (grunt) ->
         files:
           'dist/scripts/libs/requirejs/require.js': ['dist/scripts/libs/requirejs/require.js']
 
-    # Imagemin
-    imagemin:
-      png:
-        options:
-          optimizationLevel: 7
-        files: [{
-          expand: true
-          cwd: 'dist/images/'
-          src: ['**/*.png']
-          dest: 'dist/images/'
-          ext: '.png'
-        }]
-
-    # Install
-    # ----
-
-    # Shell
-    shell:
-      bower:
-        command: 'bower install'
-
   # Dependencies
   # ============
   for name of pkg.dependencies when name.substring(0, 6) is 'grunt-'
@@ -235,10 +214,4 @@ module.exports = (grunt) ->
     'clean'
     'uglify:dist'
     # 'imagemin'
-  ]
-
-  # Install
-  # -----
-  grunt.registerTask 'install', [
-    'shell:bower'
   ]
