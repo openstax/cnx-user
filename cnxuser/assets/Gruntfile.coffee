@@ -204,7 +204,7 @@ module.exports = (grunt) ->
     'jshint'
     'jsbeautifier'
     'coffeelint'
-    #'recess'
+    # 'recess'
   ]
 
   # Dist
@@ -213,5 +213,4 @@ module.exports = (grunt) ->
     'requirejs'
     'clean'
     'uglify:dist'
-    # 'imagemin'
   ]
