@@ -43,7 +43,8 @@ REFERRER_SESSION_KEY = 'referrer_info'
 @view_config(route_name='index')
 @view_config(route_name='catch-all')
 def index(request):
-    with open(os.path.join(here, 'assets', 'index.html'), 'r') as f:
+    index_html = request.registry.settings['~index.html']
+    with open(index_html, 'r') as f:
         return render_to_response('string', f.read())
 
 
