@@ -26,6 +26,7 @@ from pyramid.view import view_config
 from sqlalchemy import or_
 from sqlalchemy.exc import DBAPIError
 from velruse.events import AfterLogin
+from openid.consumer.discover import DiscoveryFailure
 
 from .utils import diffdict, discover_uid
 from .models import (
@@ -241,6 +242,7 @@ def lazy_login(request):
     the login logic in their application interface. It's important to
     direct traffic to this route because it captures necessary information
     that would otherwise be acquired via other api pieces."""
+    logger.debug("start lazy login")
     # Capture the requesting service info.
     capture_requesting_service(request)
 
@@ -292,9 +294,23 @@ def _login(request, user_or_id):
     return httpexceptions.HTTPFound(location=location, headers=auth_headers)
 
 
+@view_config(context=DiscoveryFailure)
+def openID_failed_discovery(exc, request):
+    """
+    This pyramid app defers /server/login/openid to a velruse incident,
+    so I need to capture errors raised there through a view here.
+    :param exc: traceback
+    :param request: request
+    :returns: a 500 error with a 'friendly' explanation
+    """
+    msg = exc.args[0] if exc.args else ""
+    response =  Response('Failed validation: %s' % msg)
+    response.status_int = 500
+    return response
+    
 @view_config(context='velruse.AuthenticationComplete')
 def login_complete(request):
-    """This view is hit after a visitor has successfully authenticated with
+    """This view is hit  a visitor has successfully authenticated with
     one of the registered identity providers.
 
     The successfully authenticated visitor will be remembered (given a cookie)
