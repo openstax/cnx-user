@@ -16,10 +16,12 @@ from sqlalchemy.orm import (
     sessionmaker, scoped_session,
     relationship,
     )
+from zope.interface import implements
 from zope.sqlalchemy import ZopeTransactionExtension
 from colanderalchemy import SQLAlchemySchemaNode
 
 from ._sqlalchemy import GUID
+from .interfaces import IUser, IIdentity
 
 
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
@@ -35,6 +37,7 @@ def _json_serialize(value):
 
 
 class User(Base):
+    implements(IUser)
     __tablename__ = "users"
 
     id = Column(GUID, default=uuid.uuid4, primary_key=True)
@@ -80,6 +83,7 @@ class User(Base):
 
 
 class Identity(Base):
+    implements(IIdentity)
     __tablename__   = "identities"
 
     id = Column(GUID, default=uuid.uuid4, primary_key=True)

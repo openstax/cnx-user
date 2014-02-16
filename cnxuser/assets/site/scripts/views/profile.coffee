@@ -14,9 +14,8 @@ define [
       @model = new User(id)
       @listenTo(@model, 'change', @render)
 
-      @template = template(@model.toJSON())
-
     render: () ->
+      @template = template @model.toJSON()
       @$el.html(@template)
 
       return @
