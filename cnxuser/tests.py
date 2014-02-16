@@ -999,5 +999,6 @@ class CheckTests(unittest.TestCase):
         url = request.route_url('get-user', user_id=user_id)
         self.assertEqual(data['url'], url)
 
+    @unittest.expectedFailure
     def test_fails_on_expired(self):
         self.fail("Has not been implemented yet.")
