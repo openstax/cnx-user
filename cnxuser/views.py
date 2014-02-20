@@ -27,12 +27,12 @@ from sqlalchemy import or_
 from sqlalchemy.exc import DBAPIError
 from velruse.events import AfterLogin
 
+from .interfaces import ILoginDataExtractor, IActiveIdentityProviders
 from .utils import diffdict, discover_uid
 from .models import (
     DBSession, User, Identity,
     user_schema,
     )
-from ._velruse import IActiveIdentityProviders
 
 
 logger = logging.getLogger('cnxauth')
@@ -327,6 +327,11 @@ def login_complete(request):
                                 user=user)
             DBSession.add(identity)
         user = identity.user
+        data_extractor = request.registry.queryMultiAdapter(
+                (user, identity), ILoginDataExtractor, name=identity.name)
+        if data_extractor:
+            data_extractor()
+        DBSession.add(user)
     except DBAPIError:
         raise httpexceptions.HTTPServiceUnavailable(connection_error_message,
                                                     content_type='text/plain',

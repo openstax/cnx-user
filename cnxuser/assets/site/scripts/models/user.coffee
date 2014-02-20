@@ -10,6 +10,7 @@ define [
       middlename: ''
       lastname: ''
       email: ''
+      fullname: ''
 
     initialize: () ->
       @fetch()

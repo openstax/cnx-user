@@ -768,9 +768,14 @@ class LoginCompleteTests(unittest.TestCase):
         """Makes a contextual post login request."""
         # Create the request context.
         from velruse import AuthenticationComplete
+        from .interfaces import IUser, IIdentity
+        from ._velruse import GoogleLoginDataExtractor
         if request is None:
             request = self._make_request()
         request.context = AuthenticationComplete(**ident)
+        request.registry.registerAdapter(
+                GoogleLoginDataExtractor, (IUser, IIdentity),
+                name=GoogleLoginDataExtractor.id)
         return request
 
     def test_local_login_w_new_identity(self):
@@ -810,6 +815,51 @@ class LoginCompleteTests(unittest.TestCase):
         user = DBSession.query(User).first()
         identity = user.identities[0]
         self.assertEqual(identity.identifier, identifier)
+        self.assertEqual(resp.status_int, 302)
+        self.assertEqual(resp.location,
+                         request.route_url('www-get-user', id=user.id))
+
+    def test_google_login_w_new_identity(self):
+        # Case for a completely new visitor logging into cnx-user using google
+        identifier = 'michael@gmail.com'
+        request = self._make_one(ident=TEST_GOOGLE_IDENTS[0])
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual(identity.identifier, identifier)
+        self.assertEqual(user.fullname, 'Michael Mulich')
+        self.assertEqual(user.email, 'michael@gmail.com')
+        self.assertEqual(resp.status_int, 302)
+        self.assertEqual(resp.location,
+                         request.route_url('www-get-user', id=user.id))
+
+    def test_google_login_w_existing_identity(self):
+        # Case where the identity exists, therefore the user exists. This
+        #   is a case of reauthentication.
+        identifier = 'michael@gmail.com'
+        identity_id, user_id = self._make_identity(
+                identifier, TEST_GOOGLE_IDENTS[0])
+        request = self._make_one(ident=TEST_GOOGLE_IDENTS[0])
+
+        from .views import login_complete
+        with transaction.manager:
+            resp = login_complete(request)
+
+        # Since this is the first visitor and the database is empty,
+        #   the new user and identity are the only entries.
+        from .models import User, Identity
+        user = DBSession.query(User).first()
+        identity = user.identities[0]
+        self.assertEqual(identity.identifier, identifier)
+        self.assertEqual(user.fullname, 'Michael Mulich')
+        self.assertEqual(user.email, 'michael@gmail.com')
         self.assertEqual(resp.status_int, 302)
         self.assertEqual(resp.location,
                          request.route_url('www-get-user', id=user.id))
@@ -999,5 +1049,6 @@ class CheckTests(unittest.TestCase):
         url = request.route_url('get-user', user_id=user_id)
         self.assertEqual(data['url'], url)
 
+    @unittest.expectedFailure
     def test_fails_on_expired(self):
         self.fail("Has not been implemented yet.")

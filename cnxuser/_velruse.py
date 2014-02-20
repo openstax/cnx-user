@@ -11,44 +11,13 @@ data sets for identity providers that allows the application to build
 necessary functions, forms and views around the identiy provider.
 """
 from collections import Mapping
+import json
 
 import velruse
-from zope.interface import implementer, Attribute, Interface
+from zope.interface import implements, implementer
 from pyramid.threadlocal import get_current_request
 
-
-# {id: <string>, name: <human-readable-name>,
-#  location: <login-url>,
-#  # optionally...
-#  fields: {name: <name>, type: (text|hidden),
-#           # necessary for hidden fields
-#           value: <default-value>,
-#           # useful for text fields
-#           label: <text>,
-#           placeholder: <text>,
-#           },
-#  autosubmit: (True|False),
-#  },
-
-
-class IIdentityProvider(Interface):
-    """Contains information about an identity and special methods to get
-    other information about the identity."""
-
-    id = Attribute("identifier that matches with the ``velruse``.")
-    name = Attribute("Human readible name for the identity provider.")
-    location = Attribute("URL where the login sequence should begin and the"
-                         "field values should be submitted.")
-
-    fields = Attribute("A list of fields required by the identity provider.")
-    auto_submit = Attribute("Boolean value for determining if a form can be"
-                            "auto submitted. Usually not if user input"
-                            "is required.")
-
-
-class IActiveIdentityProviders(Interface):
-    """Utility that contains a sequence of active registered
-    identity providers."""
+from .interfaces import IIdentityProvider, ILoginDataExtractor
 
 
 @implementer(IIdentityProvider)
@@ -89,3 +58,18 @@ GOOGLE = {
     'auto_submit': True,
     }
 google = IdentityProvider(**GOOGLE)
+
+
+class GoogleLoginDataExtractor(object):
+    implements(ILoginDataExtractor)
+
+    id = 'google'
+
+    def __init__(self, user, identity):
+        self.user = user
+        self.identity = identity
+        self.profile = json.loads(self.identity.profile)
+
+    def __call__(self):
+        self.user.email = self.profile.get('verifiedEmail')
+        self.user.fullname = self.profile.get('displayName')
